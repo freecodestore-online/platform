@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cron Expression Builder &amp; Parser — FreeCodeStore</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e7;font-family:'Inter',sans-serif;padding:24px;min-height:100vh}
+a{color:#22d3ee;text-decoration:none}a:hover{text-decoration:underline}
+.back{display:inline-block;margin-bottom:20px;font-size:14px}
+h1{font-size:24px;font-weight:600;margin-bottom:20px}
+.panel{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:16px;margin-bottom:16px}
+input[type=text]{width:100%;font-family:'JetBrains Mono',monospace;font-size:18px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:14px;outline:none;text-align:center;letter-spacing:2px}
+input[type=text]:focus{border-color:#22d3ee}
+button{font-family:'Inter',sans-serif;font-size:13px;background:#22d3ee;color:#09090b;font-weight:500;cursor:pointer;border:none;padding:8px 14px;border-radius:6px}
+button:hover{opacity:0.9}
+button.secondary{background:#27272a;color:#e4e4e7}
+button.preset{font-size:12px;padding:6px 12px;background:#09090b;border:1px solid #27272a;color:#e4e4e7;font-family:'JetBrains Mono',monospace}
+button.preset:hover{border-color:#22d3ee;color:#22d3ee}
+.description{font-size:16px;color:#22d3ee;text-align:center;padding:12px 0;font-weight:500}
+.validation{font-size:13px;text-align:center;padding:4px 0}
+.valid{color:#4ade80}.invalid{color:#ef4444}
+.section-title{font-size:12px;color:#71717a;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;margin-top:16px}
+.next-runs{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:2}
+.next-runs .run{display:flex;gap:12px;padding:4px 0;border-bottom:1px solid #27272a}
+.next-runs .run:last-child{border-bottom:none}
+.run-num{color:#71717a;min-width:24px}
+.run-date{color:#e4e4e7}
+.run-relative{color:#71717a;font-size:12px}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.builder{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:768px){.builder{grid-template-columns:repeat(2,1fr)}}
+.field-group{background:#09090b;border:1px solid #27272a;border-radius:6px;padding:12px}
+.field-label{font-size:11px;color:#71717a;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.field-value{font-family:'JetBrains Mono',monospace;font-size:14px;color:#22d3ee;margin-bottom:8px}
+select{font-family:'Inter',sans-serif;font-size:12px;background:#18181b;color:#e4e4e7;border:1px solid #27272a;border-radius:4px;padding:4px 6px;width:100%;outline:none}
+.history-item{font-family:'JetBrains Mono',monospace;font-size:13px;padding:6px 8px;cursor:pointer;border-radius:4px;display:flex;justify-content:space-between;align-items:center}
+.history-item:hover{background:#27272a}
+.history-desc{color:#71717a;font-size:12px;font-family:'Inter',sans-serif}
+.tabs{display:flex;gap:4px;margin-bottom:16px}
+.tab{padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;background:#09090b;border:1px solid #27272a;color:#71717a}
+.tab.active{background:#22d3ee;color:#09090b;border-color:#22d3ee}
+.fields-hint{display:flex;gap:4px;justify-content:center;margin:8px 0;font-size:11px;color:#71717a;font-family:'JetBrains Mono',monospace}
+.fields-hint span{flex:1;text-align:center}
+</style>
+</head>
+<body>
+<a class="back" href="/">&#8592; All Tools</a>
+<h1>Cron Expression Builder &amp; Parser</h1>
+
+<div class="panel">
+<input type="text" id="cronInput" value="*/15 * * * *" placeholder="* * * * *">
+<div class="fields-hint"><span>minute</span><span>hour</span><span>day</span><span>month</span><span>weekday</span></div>
+<div class="description" id="description"></div>
+<div class="validation" id="validation"></div>
+</div>
+
+<div class="presets">
+<button class="preset" onclick="setCron('* * * * *')">Every minute</button>
+<button class="preset" onclick="setCron('*/5 * * * *')">Every 5 min</button>
+<button class="preset" onclick="setCron('*/15 * * * *')">Every 15 min</button>
+<button class="preset" onclick="setCron('0 * * * *')">Hourly</button>
+<button class="preset" onclick="setCron('0 */6 * * *')">Every 6 hours</button>
+<button class="preset" onclick="setCron('0 0 * * *')">Daily midnight</button>
+<button class="preset" onclick="setCron('0 9 * * *')">Daily 9 AM</button>
+<button class="preset" onclick="setCron('0 9 * * 1-5')">Weekdays 9 AM</button>
+<button class="preset" onclick="setCron('0 0 * * 0')">Weekly Sunday</button>
+<button class="preset" onclick="setCron('0 0 1 * *')">Monthly 1st</button>
+<button class="preset" onclick="setCron('0 0 1 1 *')">Yearly Jan 1</button>
+<button class="preset" onclick="setCron('30 4 * * *')">4:30 AM daily</button>
+<button class="preset" onclick="setCron('0 0 * * 1')">Every Monday</button>
+<button class="preset" onclick="setCron('0 12 * * *')">Noon daily</button>
+<button class="preset" onclick="setCron('0 0 15 * *')">15th monthly</button>
+</div>
+
+<div class="tabs">
+<div class="tab active" data-tab="next">Next Runs</div>
+<div class="tab" data-tab="builder">Visual Builder</div>
+<div class="tab" data-tab="history">History</div>
+</div>
+
+<div id="tab-next" class="panel">
+<div class="section-title">Next 10 Execution Times</div>
+<div class="next-runs" id="nextRuns"></div>
+</div>
+
+<div id="tab-builder" class="panel" style="display:none">
+<div class="builder">
+<div class="field-group">
+<div class="field-label">Minute (0-59)</div>
+<div class="field-value" id="bMinVal">*</div>
+<select id="bMinType" onchange="updateBuilder()">
+<option value="every">Every minute</option>
+<option value="specific">Specific</option>
+<option value="range">Range</option>
+<option value="step">Every N</option>
+</select>
+<div id="bMinExtra" style="margin-top:6px"></div>
+</div>
+<div class="field-group">
+<div class="field-label">Hour (0-23)</div>
+<div class="field-value" id="bHourVal">*</div>
+<select id="bHourType" onchange="updateBuilder()">
+<option value="every">Every hour</option>
+<option value="specific">Specific</option>
+<option value="range">Range</option>
+<option value="step">Every N</option>
+</select>
+<div id="bHourExtra" style="margin-top:6px"></div>
+</div>
+<div class="field-group">
+<div class="field-label">Day (1-31)</div>
+<div class="field-value" id="bDayVal">*</div>
+<select id="bDayType" onchange="updateBuilder()">
+<option value="every">Every day</option>
+<option value="specific">Specific</option>
+<option value="range">Range</option>
+<option value="step">Every N</option>
+</select>
+<div id="bDayExtra" style="margin-top:6px"></div>
+</div>
+<div class="field-group">
+<div class="field-label">Month (1-12)</div>
+<div class="field-value" id="bMonthVal">*</div>
+<select id="bMonthType" onchange="updateBuilder()">
+<option value="every">Every month</option>
+<option value="specific">Specific</option>
+<option value="range">Range</option>
+</select>
+<div id="bMonthExtra" style="margin-top:6px"></div>
+</div>
+<div class="field-group">
+<div class="field-label">Weekday (0-6)</div>
+<div class="field-value" id="bDowVal">*</div>
+<select id="bDowType" onchange="updateBuilder()">
+<option value="every">Every day</option>
+<option value="specific">Specific</option>
+<option value="range">Range</option>
+</select>
+<div id="bDowExtra" style="margin-top:6px"></div>
+</div>
+</div>
+<button onclick="applyBuilder()">Apply to Expression</button>
+</div>
+
+<div id="tab-history" class="panel" style="display:none">
+<div class="section-title">Recent Expressions</div>
+<div id="historyList"></div>
+</div>
+
+<script>
+const tabs = document.querySelectorAll('.tab');
+tabs.forEach(t => t.onclick = () => {
+  tabs.forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  document.querySelectorAll('[id^="tab-"]').forEach(p => p.style.display = 'none');
+  document.getElementById('tab-' + t.dataset.tab).style.display = 'block';
+});
+
+function setCron(expr) { document.getElementById('cronInput').value = expr; parse(); }
+
+function parse() {
+  const expr = document.getElementById('cronInput').value.trim();
+  const parts = expr.split(/\s+/);
+  const valid = parts.length >= 5 && parts.length <= 6;
+  document.getElementById('validation').innerHTML = valid
+    ? '<span class="valid">Valid expression</span>'
+    : '<span class="invalid">Invalid: expected 5 fields (minute hour day month weekday)</span>';
+  if (!valid) { document.getElementById('description').textContent = ''; document.getElementById('nextRuns').innerHTML = ''; return; }
+
+  const [min, hour, dom, month, dow] = parts;
+  document.getElementById('description').textContent = describe(min, hour, dom, month, dow);
+  computeNextRuns(min, hour, dom, month, dow);
+  saveHistory(expr, document.getElementById('description').textContent);
+}
+
+function describe(min, hour, dom, month, dow) {
+  const parts = [];
+  // Time
+  if (min === '*' && hour === '*') parts.push('Every minute');
+  else if (min.startsWith('*/')) parts.push(`Every ${min.slice(2)} minutes`);
+  else if (hour === '*') parts.push(`At minute ${min} of every hour`);
+  else if (hour.startsWith('*/')) parts.push(`At minute ${min} every ${hour.slice(2)} hours`);
+  else {
+    const h = parseInt(hour); const m = parseInt(min) || 0;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    parts.push(`At ${h12}:${String(m).padStart(2,'0')} ${ampm}`);
+  }
+
+  // Day of month
+  if (dom !== '*') {
+    if (dom.includes(',')) parts.push(`on days ${dom}`);
+    else if (dom.includes('-')) parts.push(`on days ${dom}`);
+    else if (dom.startsWith('*/')) parts.push(`every ${dom.slice(2)} days`);
+    else parts.push(`on day ${dom}`);
+  }
+
+  // Month
+  const monthNames = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+  if (month !== '*') {
+    if (month.includes(',')) parts.push(`in ${month.split(',').map(m => monthNames[parseInt(m)] || m).join(', ')}`);
+    else if (month.includes('-')) { const [a,b] = month.split('-'); parts.push(`${monthNames[parseInt(a)] || a} through ${monthNames[parseInt(b)] || b}`); }
+    else parts.push(`in ${monthNames[parseInt(month)] || month}`);
+  }
+
+  // Weekday
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  if (dow !== '*') {
+    if (dow === '1-5') parts.push('on weekdays');
+    else if (dow === '0,6') parts.push('on weekends');
+    else if (dow.includes(',')) parts.push(`on ${dow.split(',').map(d => dayNames[parseInt(d)] || d).join(', ')}`);
+    else if (dow.includes('-')) { const [a,b] = dow.split('-'); parts.push(`${dayNames[parseInt(a)] || a} through ${dayNames[parseInt(b)] || b}`); }
+    else parts.push(`on ${dayNames[parseInt(dow)] || dow}`);
+  }
+
+  return parts.join(', ') || 'Every minute';
+}
+
+function expandField(field, min, max) {
+  if (field === '*') { const r = []; for (let i = min; i <= max; i++) r.push(i); return r; }
+  const values = new Set();
+  field.split(',').forEach(part => {
+    if (part.includes('/')) {
+      const [range, step] = part.split('/');
+      const s = parseInt(step);
+      let start = min;
+      if (range !== '*') { const [a] = range.split('-'); start = parseInt(a); }
+      for (let i = start; i <= max; i += s) values.add(i);
+    } else if (part.includes('-')) {
+      const [a, b] = part.split('-').map(Number);
+      for (let i = a; i <= b; i++) values.add(i);
+    } else {
+      values.add(parseInt(part));
+    }
+  });
+  return [...values].sort((a,b) => a - b);
+}
+
+function computeNextRuns(min, hour, dom, month, dow) {
+  const mins = expandField(min, 0, 59);
+  const hours = expandField(hour, 0, 23);
+  const doms = expandField(dom, 1, 31);
+  const months = expandField(month, 1, 12);
+  const dows = expandField(dow, 0, 6);
+
+  const runs = [];
+  const now = new Date();
+  const d = new Date(now);
+  d.setSeconds(0, 0);
+  d.setMinutes(d.getMinutes() + 1);
+
+  let safety = 0;
+  while (runs.length < 10 && safety < 525600) {
+    safety++;
+    if (months.includes(d.getMonth() + 1) &&
+        doms.includes(d.getDate()) &&
+        dows.includes(d.getDay()) &&
+        hours.includes(d.getHours()) &&
+        mins.includes(d.getMinutes())) {
+      runs.push(new Date(d));
+    }
+    d.setMinutes(d.getMinutes() + 1);
+  }
+
+  const container = document.getElementById('nextRuns');
+  if (runs.length === 0) { container.innerHTML = '<div style="color:#71717a">No runs found within the next year.</div>'; return; }
+
+  container.innerHTML = runs.map((r, i) => {
+    const diff = r - now;
+    const mins = Math.floor(diff / 60000);
+    const hrs = Math.floor(mins / 60);
+    const days = Math.floor(hrs / 24);
+    let relative = '';
+    if (days > 0) relative = `in ${days}d ${hrs%24}h`;
+    else if (hrs > 0) relative = `in ${hrs}h ${mins%60}m`;
+    else relative = `in ${mins}m`;
+    return `<div class="run"><span class="run-num">${i+1}.</span><span class="run-date">${r.toLocaleString()}</span><span class="run-relative">${relative}</span></div>`;
+  }).join('');
+}
+
+function updateBuilder() {
+  const fields = [
+    {id:'bMin', min:0, max:59, label:'minute'},
+    {id:'bHour', min:0, max:23, label:'hour'},
+    {id:'bDay', min:1, max:31, label:'day'},
+    {id:'bMonth', min:1, max:12, label:'month'},
+    {id:'bDow', min:0, max:6, label:'weekday'}
+  ];
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const monthNames = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  fields.forEach(f => {
+    const type = document.getElementById(f.id + 'Type').value;
+    const extra = document.getElementById(f.id + 'Extra');
+    const val = document.getElementById(f.id + 'Val');
+
+    if (type === 'every') { val.textContent = '*'; extra.innerHTML = ''; }
+    else if (type === 'specific') {
+      extra.innerHTML = `<input type="number" min="${f.min}" max="${f.max}" value="${f.min}" style="width:100%;font-family:'JetBrains Mono',monospace;font-size:12px;background:#18181b;color:#e4e4e7;border:1px solid #27272a;border-radius:4px;padding:4px 6px" onchange="document.getElementById('${f.id}Val').textContent=this.value">`;
+      val.textContent = String(f.min);
+    }
+    else if (type === 'range') {
+      extra.innerHTML = `<input type="number" min="${f.min}" max="${f.max}" value="${f.min}" style="width:45%;font-size:12px;background:#18181b;color:#e4e4e7;border:1px solid #27272a;border-radius:4px;padding:4px" onchange="document.getElementById('${f.id}Val').textContent=this.value+'-'+this.nextElementSibling.nextElementSibling.value"><span style="color:#71717a"> - </span><input type="number" min="${f.min}" max="${f.max}" value="${f.max}" style="width:45%;font-size:12px;background:#18181b;color:#e4e4e7;border:1px solid #27272a;border-radius:4px;padding:4px" onchange="document.getElementById('${f.id}Val').textContent=this.previousElementSibling.previousElementSibling.value+'-'+this.value">`;
+      val.textContent = `${f.min}-${f.max}`;
+    }
+    else if (type === 'step') {
+      extra.innerHTML = `<input type="number" min="1" max="${f.max}" value="5" style="width:100%;font-size:12px;background:#18181b;color:#e4e4e7;border:1px solid #27272a;border-radius:4px;padding:4px 6px" onchange="document.getElementById('${f.id}Val').textContent='*/'+this.value">`;
+      val.textContent = '*/5';
+    }
+  });
+}
+
+function applyBuilder() {
+  const fields = ['bMin','bHour','bDay','bMonth','bDow'];
+  const expr = fields.map(f => document.getElementById(f + 'Val').textContent).join(' ');
+  document.getElementById('cronInput').value = expr;
+  parse();
+}
+
+function saveHistory(expr, desc) {
+  let history = JSON.parse(localStorage.getItem('cron-history') || '[]');
+  history = history.filter(h => h.expr !== expr);
+  history.unshift({expr, desc});
+  history = history.slice(0, 15);
+  localStorage.setItem('cron-history', JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const history = JSON.parse(localStorage.getItem('cron-history') || '[]');
+  list.innerHTML = history.map(h =>
+    `<div class="history-item" onclick="setCron('${h.expr}')"><span>${h.expr}</span><span class="history-desc">${h.desc}</span></div>`
+  ).join('') || '<div style="color:#71717a;font-size:13px">No history yet.</div>';
+}
+
+document.getElementById('cronInput').addEventListener('input', parse);
+renderHistory();
+parse();
+</script>
+<script src="/related.js"></script>
+</body>
+</html>

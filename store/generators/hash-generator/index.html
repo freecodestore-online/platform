@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hash &amp; Checksum Generator — FreeCodeStore</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e7;font-family:'Inter',sans-serif;padding:24px;min-height:100vh}
+a{color:#22d3ee;text-decoration:none}a:hover{text-decoration:underline}
+.back{display:inline-block;margin-bottom:20px;font-size:14px}
+h1{font-size:24px;font-weight:600;margin-bottom:20px}
+.panel{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:16px;margin-bottom:16px}
+.tabs{display:flex;gap:4px;margin-bottom:16px}
+.tab{padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;background:#09090b;border:1px solid #27272a;color:#71717a;font-weight:500}
+.tab.active{background:#22d3ee;color:#09090b;border-color:#22d3ee}
+textarea,input[type=text]{width:100%;font-family:'JetBrains Mono',monospace;font-size:13px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:12px;outline:none}
+textarea{min-height:120px;resize:vertical}
+textarea:focus,input:focus{border-color:#22d3ee}
+button{font-family:'Inter',sans-serif;font-size:13px;background:#22d3ee;color:#09090b;font-weight:500;cursor:pointer;border:none;padding:8px 14px;border-radius:6px}
+button:hover{opacity:0.9}
+button.secondary{background:#27272a;color:#e4e4e7}
+button.copy-btn{background:none;color:#71717a;padding:4px 8px;font-size:12px;border:1px solid #27272a}
+button.copy-btn:hover{color:#22d3ee;border-color:#22d3ee}
+.label{font-size:12px;color:#71717a;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;margin-top:12px}
+.hash-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #27272a}
+.hash-row:last-child{border-bottom:none}
+.hash-name{min-width:80px;font-size:13px;font-weight:500;color:#71717a}
+.hash-value{font-family:'JetBrains Mono',monospace;font-size:12px;word-break:break-all;flex:1;color:#e4e4e7}
+.file-drop{border:2px dashed #27272a;border-radius:8px;padding:32px;text-align:center;color:#71717a;cursor:pointer;transition:border-color 0.2s}
+.file-drop:hover,.file-drop.dragover{border-color:#22d3ee;color:#22d3ee}
+.file-drop input{display:none}
+.compare-section{margin-top:16px}
+.compare-result{font-size:14px;font-weight:500;padding:8px 12px;border-radius:6px;margin-top:8px}
+.compare-match{background:#052e16;color:#4ade80}
+.compare-no-match{background:#1c0a0a;color:#ef4444}
+.strength-bar{height:6px;border-radius:3px;background:#27272a;margin-top:8px;overflow:hidden}
+.strength-fill{height:100%;border-radius:3px;transition:width 0.3s}
+.strength-label{font-size:12px;margin-top:4px}
+.toolbar{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<a class="back" href="/">&#8592; All Tools</a>
+<h1>Hash &amp; Checksum Generator</h1>
+
+<div class="tabs">
+<div class="tab active" data-tab="text">Text Input</div>
+<div class="tab" data-tab="file">File Input</div>
+<div class="tab" data-tab="compare">Compare</div>
+<div class="tab" data-tab="hmac">HMAC</div>
+<div class="tab" data-tab="password">Password Strength</div>
+</div>
+
+<div id="tab-text" class="panel">
+<div class="label">Input Text</div>
+<textarea id="hashInput" placeholder="Enter text to hash...">Hello, FreeCodeStore!</textarea>
+<div class="toolbar">
+<button onclick="hashText()">Generate Hashes</button>
+</div>
+<div id="hashResults"></div>
+</div>
+
+<div id="tab-file" class="panel" style="display:none">
+<div class="file-drop" id="fileDrop">
+<p>Drop a file here or click to select</p>
+<input type="file" id="fileInput">
+</div>
+<div id="fileInfo" style="font-size:13px;color:#71717a;margin-top:8px"></div>
+<div id="fileHashResults"></div>
+</div>
+
+<div id="tab-compare" class="panel" style="display:none">
+<div class="label">Hash 1</div>
+<input type="text" id="compare1" placeholder="Paste first hash...">
+<div class="label">Hash 2</div>
+<input type="text" id="compare2" placeholder="Paste second hash...">
+<div class="toolbar">
+<button onclick="compareHashes()">Compare</button>
+</div>
+<div id="compareResult"></div>
+</div>
+
+<div id="tab-hmac" class="panel" style="display:none">
+<div class="label">Message</div>
+<textarea id="hmacInput" placeholder="Enter message..." style="min-height:80px">Hello, World!</textarea>
+<div class="label">Secret Key</div>
+<input type="text" id="hmacKey" placeholder="Enter secret key...">
+<div class="toolbar">
+<button onclick="generateHMAC()">Generate HMAC</button>
+</div>
+<div id="hmacResults"></div>
+</div>
+
+<div id="tab-password" class="panel" style="display:none">
+<div class="label">Password</div>
+<input type="text" id="passwordInput" placeholder="Enter password to analyze...">
+<div class="toolbar">
+<button onclick="analyzePassword()">Analyze</button>
+</div>
+<div id="passwordResult"></div>
+</div>
+
+<script>
+const tabs = document.querySelectorAll('.tab');
+tabs.forEach(t => t.onclick = () => {
+  tabs.forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  document.querySelectorAll('[id^="tab-"]').forEach(p => p.style.display = 'none');
+  document.getElementById('tab-' + t.dataset.tab).style.display = 'block';
+});
+
+async function computeHash(algorithm, data) {
+  const encoder = new TextEncoder();
+  const buffer = typeof data === 'string' ? encoder.encode(data) : data;
+  const hashBuffer = await crypto.subtle.digest(algorithm, buffer);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function md5(string) {
+  function md5cycle(x, k) {
+    var a = x[0], b = x[1], c = x[2], d = x[3];
+    a = ff(a, b, c, d, k[0], 7, -680876936); d = ff(d, a, b, c, k[1], 12, -389564586);
+    c = ff(c, d, a, b, k[2], 17, 606105819); b = ff(b, c, d, a, k[3], 22, -1044525330);
+    a = ff(a, b, c, d, k[4], 7, -176418897); d = ff(d, a, b, c, k[5], 12, 1200080426);
+    c = ff(c, d, a, b, k[6], 17, -1473231341); b = ff(b, c, d, a, k[7], 22, -45705983);
+    a = ff(a, b, c, d, k[8], 7, 1770035416); d = ff(d, a, b, c, k[9], 12, -1958414417);
+    c = ff(c, d, a, b, k[10], 17, -42063); b = ff(b, c, d, a, k[11], 22, -1990404162);
+    a = ff(a, b, c, d, k[12], 7, 1804603682); d = ff(d, a, b, c, k[13], 12, -40341101);
+    c = ff(c, d, a, b, k[14], 17, -1502002290); b = ff(b, c, d, a, k[15], 22, 1236535329);
+    a = gg(a, b, c, d, k[1], 5, -165796510); d = gg(d, a, b, c, k[6], 9, -1069501632);
+    c = gg(c, d, a, b, k[11], 14, 643717713); b = gg(b, c, d, a, k[0], 20, -373897302);
+    a = gg(a, b, c, d, k[5], 5, -701558691); d = gg(d, a, b, c, k[10], 9, 38016083);
+    c = gg(c, d, a, b, k[15], 14, -660478335); b = gg(b, c, d, a, k[4], 20, -405537848);
+    a = gg(a, b, c, d, k[9], 5, 568446438); d = gg(d, a, b, c, k[14], 9, -1019803690);
+    c = gg(c, d, a, b, k[3], 14, -187363961); b = gg(b, c, d, a, k[8], 20, 1163531501);
+    a = gg(a, b, c, d, k[13], 5, -1444681467); d = gg(d, a, b, c, k[2], 9, -51403784);
+    c = gg(c, d, a, b, k[7], 14, 1735328473); b = gg(b, c, d, a, k[12], 20, -1926607734);
+    a = hh(a, b, c, d, k[5], 4, -378558); d = hh(d, a, b, c, k[8], 11, -2022574463);
+    c = hh(c, d, a, b, k[11], 16, 1839030562); b = hh(b, c, d, a, k[14], 23, -35309556);
+    a = hh(a, b, c, d, k[1], 4, -1530992060); d = hh(d, a, b, c, k[4], 11, 1272893353);
+    c = hh(c, d, a, b, k[7], 16, -155497632); b = hh(b, c, d, a, k[10], 23, -1094730640);
+    a = hh(a, b, c, d, k[13], 4, 681279174); d = hh(d, a, b, c, k[0], 11, -358537222);
+    c = hh(c, d, a, b, k[3], 16, -722521979); b = hh(b, c, d, a, k[6], 23, 76029189);
+    a = hh(a, b, c, d, k[9], 4, -640364487); d = hh(d, a, b, c, k[12], 11, -421815835);
+    c = hh(c, d, a, b, k[15], 16, 530742520); b = hh(b, c, d, a, k[2], 23, -995338651);
+    a = ii(a, b, c, d, k[0], 6, -198630844); d = ii(d, a, b, c, k[7], 10, 1126891415);
+    c = ii(c, d, a, b, k[14], 15, -1416354905); b = ii(b, c, d, a, k[5], 21, -57434055);
+    a = ii(a, b, c, d, k[12], 6, 1700485571); d = ii(d, a, b, c, k[3], 10, -1894986606);
+    c = ii(c, d, a, b, k[10], 15, -1051523); b = ii(b, c, d, a, k[1], 21, -2054922799);
+    a = ii(a, b, c, d, k[8], 6, 1873313359); d = ii(d, a, b, c, k[15], 10, -30611744);
+    c = ii(c, d, a, b, k[6], 15, -1560198380); b = ii(b, c, d, a, k[13], 21, 1309151649);
+    a = ii(a, b, c, d, k[4], 6, -145523070); d = ii(d, a, b, c, k[11], 10, -1120210379);
+    c = ii(c, d, a, b, k[2], 15, 718787259); b = ii(b, c, d, a, k[9], 21, -343485551);
+    x[0] = add32(a, x[0]); x[1] = add32(b, x[1]); x[2] = add32(c, x[2]); x[3] = add32(d, x[3]);
+  }
+  function cmn(q, a, b, x, s, t) { a = add32(add32(a, q), add32(x, t)); return add32((a << s) | (a >>> (32 - s)), b); }
+  function ff(a, b, c, d, x, s, t) { return cmn((b & c) | ((~b) & d), a, b, x, s, t); }
+  function gg(a, b, c, d, x, s, t) { return cmn((b & d) | (c & (~d)), a, b, x, s, t); }
+  function hh(a, b, c, d, x, s, t) { return cmn(b ^ c ^ d, a, b, x, s, t); }
+  function ii(a, b, c, d, x, s, t) { return cmn(c ^ (b | (~d)), a, b, x, s, t); }
+  function add32(a, b) { return (a + b) & 0xFFFFFFFF; }
+  var n = string.length, state = [1732584193, -271733879, -1732584194, 271733878], i;
+  for (i = 64; i <= n; i += 64) { md5cycle(state, md5blk(string.substring(i - 64, i))); }
+  string = string.substring(i - 64);
+  var tail = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  for (i = 0; i < string.length; i++) tail[i >> 2] |= string.charCodeAt(i) << ((i % 4) << 3);
+  tail[i >> 2] |= 0x80 << ((i % 4) << 3);
+  if (i > 55) { md5cycle(state, tail); tail = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]; }
+  tail[14] = n * 8;
+  md5cycle(state, tail);
+  return state.map(s => { var r = ''; for (var j = 0; j < 4; j++) r += ((s >> (j * 8)) & 0xFF).toString(16).padStart(2, '0'); return r; }).join('');
+  function md5blk(s) { var md5blks = []; for (var i = 0; i < 64; i += 4) { md5blks[i >> 2] = s.charCodeAt(i) + (s.charCodeAt(i+1) << 8) + (s.charCodeAt(i+2) << 16) + (s.charCodeAt(i+3) << 24); } return md5blks; }
+}
+
+function renderHashes(results, containerId) {
+  document.getElementById(containerId).innerHTML = results.map(({name, value}) =>
+    `<div class="hash-row"><span class="hash-name">${name}</span><span class="hash-value">${value}</span><button class="copy-btn" onclick="navigator.clipboard.writeText('${value}')">Copy</button></div>`
+  ).join('');
+}
+
+async function hashText() {
+  const input = document.getElementById('hashInput').value;
+  const results = [
+    {name: 'MD5', value: md5(input)},
+    {name: 'SHA-1', value: await computeHash('SHA-1', input)},
+    {name: 'SHA-256', value: await computeHash('SHA-256', input)},
+    {name: 'SHA-384', value: await computeHash('SHA-384', input)},
+    {name: 'SHA-512', value: await computeHash('SHA-512', input)},
+  ];
+  renderHashes(results, 'hashResults');
+}
+
+// File hashing
+const fileDrop = document.getElementById('fileDrop');
+const fileInput = document.getElementById('fileInput');
+fileDrop.onclick = () => fileInput.click();
+fileDrop.ondragover = e => { e.preventDefault(); fileDrop.classList.add('dragover'); };
+fileDrop.ondragleave = () => fileDrop.classList.remove('dragover');
+fileDrop.ondrop = e => { e.preventDefault(); fileDrop.classList.remove('dragover'); hashFile(e.dataTransfer.files[0]); };
+fileInput.onchange = () => hashFile(fileInput.files[0]);
+
+async function hashFile(file) {
+  if (!file) return;
+  document.getElementById('fileInfo').textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+  const buffer = await file.arrayBuffer();
+  const results = [
+    {name: 'MD5', value: md5(new TextDecoder().decode(buffer))},
+    {name: 'SHA-1', value: await computeHash('SHA-1', buffer)},
+    {name: 'SHA-256', value: await computeHash('SHA-256', buffer)},
+    {name: 'SHA-384', value: await computeHash('SHA-384', buffer)},
+    {name: 'SHA-512', value: await computeHash('SHA-512', buffer)},
+  ];
+  renderHashes(results, 'fileHashResults');
+}
+
+function compareHashes() {
+  const h1 = document.getElementById('compare1').value.trim().toLowerCase();
+  const h2 = document.getElementById('compare2').value.trim().toLowerCase();
+  if (!h1 || !h2) return;
+  const match = h1 === h2;
+  document.getElementById('compareResult').innerHTML = `<div class="compare-result ${match ? 'compare-match' : 'compare-no-match'}">${match ? 'Hashes match!' : 'Hashes do NOT match.'}</div>`;
+}
+
+async function generateHMAC() {
+  const message = document.getElementById('hmacInput').value;
+  const key = document.getElementById('hmacKey').value;
+  if (!key) { document.getElementById('hmacResults').innerHTML = '<div style="color:#71717a;font-size:13px">Enter a secret key.</div>'; return; }
+  const encoder = new TextEncoder();
+  const algorithms = ['SHA-256', 'SHA-384', 'SHA-512'];
+  const results = [];
+  for (const alg of algorithms) {
+    const cryptoKey = await crypto.subtle.importKey('raw', encoder.encode(key), {name: 'HMAC', hash: alg}, false, ['sign']);
+    const sig = await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(message));
+    results.push({name: `HMAC-${alg.replace('SHA-','')}`, value: Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2,'0')).join('')});
+  }
+  renderHashes(results, 'hmacResults');
+}
+
+function analyzePassword() {
+  const pw = document.getElementById('passwordInput').value;
+  if (!pw) return;
+  let score = 0;
+  const checks = [];
+  if (pw.length >= 8) { score += 20; checks.push('8+ characters'); }
+  if (pw.length >= 12) { score += 10; checks.push('12+ characters'); }
+  if (pw.length >= 16) { score += 10; checks.push('16+ characters'); }
+  if (/[a-z]/.test(pw)) { score += 10; checks.push('Lowercase'); }
+  if (/[A-Z]/.test(pw)) { score += 10; checks.push('Uppercase'); }
+  if (/\d/.test(pw)) { score += 10; checks.push('Numbers'); }
+  if (/[^a-zA-Z0-9]/.test(pw)) { score += 15; checks.push('Special chars'); }
+  if (!/(.)\1{2,}/.test(pw)) { score += 10; checks.push('No repeats'); }
+  if (!/^(123|abc|qwerty|password)/i.test(pw)) { score += 5; checks.push('No common patterns'); }
+  score = Math.min(score, 100);
+  const colors = ['#ef4444','#f59e0b','#eab308','#4ade80','#22d3ee'];
+  const labels = ['Very Weak','Weak','Fair','Strong','Very Strong'];
+  const idx = score < 20 ? 0 : score < 40 ? 1 : score < 60 ? 2 : score < 80 ? 3 : 4;
+  const charset = ((/[a-z]/.test(pw)?26:0) + (/[A-Z]/.test(pw)?26:0) + (/\d/.test(pw)?10:0) + (/[^a-zA-Z0-9]/.test(pw)?32:0)) || 1;
+  const entropy = Math.round(pw.length * Math.log2(charset));
+  document.getElementById('passwordResult').innerHTML = `
+    <div class="strength-bar"><div class="strength-fill" style="width:${score}%;background:${colors[idx]}"></div></div>
+    <div class="strength-label" style="color:${colors[idx]}">${labels[idx]} (${score}/100) — ${entropy} bits of entropy</div>
+    <div style="margin-top:8px;font-size:13px;color:#71717a">Checks passed: ${checks.join(', ')}</div>
+    <div style="margin-top:4px;font-size:13px;color:#71717a">Brute-force time estimate: ~${entropy < 40 ? 'seconds' : entropy < 60 ? 'hours' : entropy < 80 ? 'years' : 'centuries'}</div>
+  `;
+}
+
+hashText();
+</script>
+<script src="/related.js"></script>
+</body>
+</html>

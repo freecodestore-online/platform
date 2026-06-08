@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>.env File Editor — FreeCodeStore</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e7;font-family:'Inter',sans-serif;padding:24px;min-height:100vh}
+a{color:#22d3ee;text-decoration:none}
+a:hover{text-decoration:underline}
+.back{display:inline-block;margin-bottom:20px;font-size:14px}
+h1{font-size:24px;font-weight:600;margin-bottom:20px}
+.panel{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:16px;margin-bottom:16px}
+input,textarea,select{font-family:'JetBrains Mono',monospace;font-size:13px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:8px 12px;outline:none}
+input:focus,textarea:focus{border-color:#22d3ee}
+textarea{width:100%;resize:vertical;min-height:120px}
+button{font-family:'Inter',sans-serif;font-size:13px;background:#22d3ee;color:#09090b;font-weight:500;cursor:pointer;border:none;padding:8px 16px;border-radius:6px}
+button:hover{opacity:0.9}
+button.secondary{background:#27272a;color:#e4e4e7}
+button.small{font-size:11px;padding:4px 10px}
+button.danger{background:#ef4444;color:#fff}
+.section-title{font-size:13px;font-weight:500;color:#71717a;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;background:#09090b;border:1px solid #27272a;color:#71717a;font-family:'Inter',sans-serif}
+.tab.active{background:#22d3ee;color:#09090b;border-color:#22d3ee}
+.env-table{width:100%;border-collapse:collapse}
+.env-table th{text-align:left;font-size:11px;color:#71717a;text-transform:uppercase;letter-spacing:0.5px;padding:8px;border-bottom:1px solid #27272a}
+.env-table td{padding:6px 8px;border-bottom:1px solid #27272a22}
+.env-table input{width:100%;border:none;background:transparent;color:#e4e4e7;font-family:'JetBrains Mono',monospace;font-size:13px;padding:4px;outline:none}
+.env-table input:focus{background:#09090b;border-radius:4px}
+.env-table .key-input{color:#22d3ee}
+.env-table .val-input{color:#e4e4e7}
+.env-table .val-input.masked{color:transparent;text-shadow:0 0 6px #71717a}
+.env-table .remove-btn{background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px;padding:4px 8px}
+.output{background:#09090b;border:1px solid #27272a;border-radius:6px;padding:12px;min-height:120px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;white-space:pre-wrap;overflow-x:auto}
+.validation-item{padding:6px 0;font-size:13px;border-bottom:1px solid #27272a22}
+.validation-item.warn{color:#fbbf24}
+.validation-item.error{color:#f87171}
+.validation-item.ok{color:#4ade80}
+.template-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:8px}
+.template-btn{font-size:12px;padding:8px 10px;text-align:left;background:#09090b;border:1px solid #27272a;border-radius:4px;cursor:pointer;color:#e4e4e7;font-family:'Inter',sans-serif}
+.template-btn:hover{border-color:#22d3ee}
+</style>
+</head>
+<body>
+<a class="back" href="/">&#8592; All Tools</a>
+<h1>.env File Editor</h1>
+
+<div class="panel">
+<div class="row">
+<button onclick="addVar()">+ Add Variable</button>
+<button class="secondary" onclick="importEnv()">Import .env</button>
+<button class="secondary" onclick="toggleMask()">Mask/Unmask Values</button>
+<button class="secondary" onclick="validate()">Validate</button>
+</div>
+<table class="env-table">
+<thead><tr><th>Key</th><th>Value</th><th></th></tr></thead>
+<tbody id="envBody"></tbody>
+</table>
+</div>
+
+<div class="tabs">
+<div class="tab active" data-tab="env">Export .env</div>
+<div class="tab" data-tab="json">JSON</div>
+<div class="tab" data-tab="docker">Docker Compose</div>
+<div class="tab" data-tab="yaml">YAML</div>
+<div class="tab" data-tab="validation">Validation</div>
+<div class="tab" data-tab="templates">Templates</div>
+</div>
+
+<div id="tab-env" class="panel">
+<div class="row"><button class="small" onclick="copyOutput()">Copy</button></div>
+<div class="output" id="outputEnv"></div>
+</div>
+<div id="tab-json" class="panel" style="display:none">
+<div class="row"><button class="small" onclick="copyJson()">Copy</button></div>
+<div class="output" id="outputJson"></div>
+</div>
+<div id="tab-docker" class="panel" style="display:none">
+<div class="row"><button class="small" onclick="copyDocker()">Copy</button></div>
+<div class="output" id="outputDocker"></div>
+</div>
+<div id="tab-yaml" class="panel" style="display:none">
+<div class="row"><button class="small" onclick="copyYaml()">Copy</button></div>
+<div class="output" id="outputYaml"></div>
+</div>
+<div id="tab-validation" class="panel" style="display:none">
+<div id="validationOutput"></div>
+</div>
+<div id="tab-templates" class="panel" style="display:none">
+<div class="section-title">Common Environment Templates</div>
+<div class="template-grid" id="templateGrid"></div>
+</div>
+
+<div id="importModal" style="display:none;position:fixed;inset:0;background:#0a0a0acc;z-index:50;display:none;align-items:center;justify-content:center">
+<div class="panel" style="width:90%;max-width:600px">
+<div class="section-title">Paste .env content</div>
+<textarea id="importArea" placeholder="DATABASE_URL=postgres://...&#10;SECRET_KEY=abc123&#10;PORT=3000"></textarea>
+<div class="row" style="margin-top:12px"><button onclick="doImport()">Import</button><button class="secondary" onclick="closeImport()">Cancel</button></div>
+</div>
+</div>
+
+<script>
+let envVars = [
+  {key: 'DATABASE_URL', value: 'postgres://user:pass@localhost:5432/mydb'},
+  {key: 'SECRET_KEY', value: 'super-secret-key-here'},
+  {key: 'PORT', value: '3000'},
+  {key: 'NODE_ENV', value: 'development'},
+  {key: 'API_KEY', value: 'sk-1234567890abcdef'},
+];
+let masked = false;
+
+function renderTable() {
+  const body = document.getElementById('envBody');
+  body.innerHTML = envVars.map((v, i) => `
+    <tr>
+      <td><input class="key-input" value="${escapeAttr(v.key)}" onchange="envVars[${i}].key=this.value;updateOutputs()"></td>
+      <td><input class="val-input${masked?' masked':''}" value="${escapeAttr(v.value)}" onchange="envVars[${i}].value=this.value;updateOutputs()"></td>
+      <td><span class="remove-btn" onclick="envVars.splice(${i},1);renderTable();updateOutputs()">&times;</span></td>
+    </tr>
+  `).join('');
+  updateOutputs();
+}
+
+function addVar() {
+  envVars.push({key: '', value: ''});
+  renderTable();
+  const rows = document.querySelectorAll('#envBody tr');
+  rows[rows.length - 1].querySelector('.key-input').focus();
+}
+
+function toggleMask() {
+  masked = !masked;
+  renderTable();
+}
+
+function importEnv() {
+  document.getElementById('importModal').style.display = 'flex';
+  document.getElementById('importArea').value = '';
+  document.getElementById('importArea').focus();
+}
+
+function closeImport() {
+  document.getElementById('importModal').style.display = 'none';
+}
+
+function doImport() {
+  const text = document.getElementById('importArea').value;
+  const lines = text.split('\n');
+  envVars = [];
+  lines.forEach(line => {
+    line = line.trim();
+    if (!line || line.startsWith('#')) return;
+    const eq = line.indexOf('=');
+    if (eq === -1) return;
+    let key = line.slice(0, eq).trim();
+    let value = line.slice(eq + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    envVars.push({key, value});
+  });
+  closeImport();
+  renderTable();
+}
+
+function validate() {
+  // Switch to validation tab
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  document.querySelector('[data-tab="validation"]').classList.add('active');
+  document.querySelectorAll('[id^="tab-"]').forEach(p => p.style.display = 'none');
+  document.getElementById('tab-validation').style.display = 'block';
+
+  const issues = [];
+  const keys = new Set();
+
+  envVars.forEach((v, i) => {
+    if (!v.key) { issues.push({type: 'error', msg: `Row ${i + 1}: Empty key`}); return; }
+    if (/\s/.test(v.key)) issues.push({type: 'error', msg: `"${v.key}": Key contains spaces`});
+    if (!/^[A-Z_][A-Z0-9_]*$/i.test(v.key)) issues.push({type: 'warn', msg: `"${v.key}": Key should be UPPER_SNAKE_CASE`});
+    if (keys.has(v.key)) issues.push({type: 'warn', msg: `"${v.key}": Duplicate key`});
+    keys.add(v.key);
+    if (!v.value) issues.push({type: 'warn', msg: `"${v.key}": Empty value`});
+    if (v.value.includes(' ') && !v.value.startsWith('"')) issues.push({type: 'warn', msg: `"${v.key}": Value contains spaces, should be quoted`});
+    if (v.key.toLowerCase().includes('secret') || v.key.toLowerCase().includes('password') || v.key.toLowerCase().includes('key')) {
+      if (v.value.length < 8) issues.push({type: 'warn', msg: `"${v.key}": Sensitive value seems too short`});
+    }
+  });
+
+  if (issues.length === 0) issues.push({type: 'ok', msg: 'All variables look good!'});
+  document.getElementById('validationOutput').innerHTML = issues.map(i => `<div class="validation-item ${i.type}">${i.type === 'error' ? 'ERROR' : i.type === 'warn' ? 'WARN' : 'OK'}: ${escapeHtml(i.msg)}</div>`).join('');
+}
+
+function updateOutputs() {
+  const valid = envVars.filter(v => v.key);
+
+  // .env
+  const env = valid.map(v => {
+    const val = v.value.includes(' ') || v.value.includes('"') || v.value.includes("'") ? `"${v.value}"` : v.value;
+    return `${v.key}=${val}`;
+  }).join('\n');
+  document.getElementById('outputEnv').textContent = env;
+
+  // JSON
+  const obj = {};
+  valid.forEach(v => obj[v.key] = v.value);
+  document.getElementById('outputJson').textContent = JSON.stringify(obj, null, 2);
+
+  // Docker Compose
+  const docker = 'services:\n  app:\n    environment:\n' + valid.map(v => `      - ${v.key}=${v.value}`).join('\n');
+  document.getElementById('outputDocker').textContent = docker;
+
+  // YAML
+  const yaml = 'env:\n' + valid.map(v => {
+    const val = /[\s:#{}[\],&*?|>!%@`]/.test(v.value) ? `"${v.value}"` : v.value;
+    return `  ${v.key}: ${val}`;
+  }).join('\n');
+  document.getElementById('outputYaml').textContent = yaml;
+}
+
+function copyOutput() { navigator.clipboard.writeText(document.getElementById('outputEnv').textContent); }
+function copyJson() { navigator.clipboard.writeText(document.getElementById('outputJson').textContent); }
+function copyDocker() { navigator.clipboard.writeText(document.getElementById('outputDocker').textContent); }
+function copyYaml() { navigator.clipboard.writeText(document.getElementById('outputYaml').textContent); }
+
+function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escapeAttr(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  document.querySelectorAll('[id^="tab-"]').forEach(p => p.style.display = 'none');
+  document.getElementById('tab-' + t.dataset.tab).style.display = 'block';
+});
+
+// Templates
+const templates = {
+  'Node.js': 'NODE_ENV=development\nPORT=3000\nDATABASE_URL=postgres://localhost:5432/mydb\nREDIS_URL=redis://localhost:6379\nSESSION_SECRET=change-me\nJWT_SECRET=change-me\nLOG_LEVEL=debug',
+  'Python / Django': 'DEBUG=True\nSECRET_KEY=change-me\nDATABASE_URL=postgres://localhost:5432/mydb\nALLOWED_HOSTS=localhost,127.0.0.1\nEMAIL_HOST=smtp.gmail.com\nEMAIL_PORT=587\nSTATIC_URL=/static/',
+  'Ruby / Rails': 'RAILS_ENV=development\nDATABASE_URL=postgres://localhost:5432/mydb\nSECRET_KEY_BASE=change-me\nREDIS_URL=redis://localhost:6379\nRAILS_SERVE_STATIC_FILES=true\nRAILS_LOG_LEVEL=debug',
+  'Docker': 'COMPOSE_PROJECT_NAME=myapp\nPOSTGRES_USER=admin\nPOSTGRES_PASSWORD=secret\nPOSTGRES_DB=mydb\nREDIS_HOST=redis\nNGINX_PORT=80\nAPP_PORT=3000',
+  'AWS': 'AWS_ACCESS_KEY_ID=AKIA...\nAWS_SECRET_ACCESS_KEY=...\nAWS_REGION=us-east-1\nAWS_S3_BUCKET=my-bucket\nAWS_CLOUDFRONT_ID=E123...',
+  'Cloudflare': 'CF_API_TOKEN=...\nCF_ACCOUNT_ID=...\nCF_ZONE_ID=...\nR2_ACCESS_KEY_ID=...\nR2_SECRET_ACCESS_KEY=...\nR2_BUCKET=my-bucket',
+};
+
+const grid = document.getElementById('templateGrid');
+Object.entries(templates).forEach(([name, content]) => {
+  const btn = document.createElement('div');
+  btn.className = 'template-btn';
+  btn.textContent = name;
+  btn.onclick = () => {
+    document.getElementById('importArea').value = content;
+    document.getElementById('importModal').style.display = 'flex';
+  };
+  grid.appendChild(btn);
+});
+
+renderTable();
+</script>
+<script src="/related.js"></script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base64 Encode/Decode + More — FreeCodeStore</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e7;font-family:'Inter',sans-serif;padding:24px;min-height:100vh}
+a{color:#22d3ee;text-decoration:none}a:hover{text-decoration:underline}
+.back{display:inline-block;margin-bottom:20px;font-size:14px}
+h1{font-size:24px;font-weight:600;margin-bottom:20px}
+.panel{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:16px;margin-bottom:16px}
+.tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;background:#09090b;border:1px solid #27272a;color:#71717a;font-weight:500}
+.tab.active{background:#22d3ee;color:#09090b;border-color:#22d3ee}
+textarea{width:100%;min-height:140px;resize:vertical;font-family:'JetBrains Mono',monospace;font-size:13px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:12px;outline:none;line-height:1.5}
+textarea:focus{border-color:#22d3ee}
+button{font-family:'Inter',sans-serif;font-size:13px;background:#22d3ee;color:#09090b;font-weight:500;cursor:pointer;border:none;padding:8px 14px;border-radius:6px}
+button:hover{opacity:0.9}
+button.secondary{background:#27272a;color:#e4e4e7}
+.toolbar{display:flex;gap:8px;margin:12px 0;align-items:center;flex-wrap:wrap}
+.label{font-size:12px;color:#71717a;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.arrow{display:flex;justify-content:center;padding:8px;color:#71717a;font-size:20px}
+.file-drop{border:2px dashed #27272a;border-radius:8px;padding:32px;text-align:center;color:#71717a;cursor:pointer;margin:12px 0;transition:border-color 0.2s}
+.file-drop:hover,.file-drop.dragover{border-color:#22d3ee;color:#22d3ee}
+.file-drop input{display:none}
+.preview{margin-top:12px;text-align:center}
+.preview img{max-width:100%;max-height:200px;border-radius:6px;border:1px solid #27272a}
+.bulk-mode{font-size:13px;color:#71717a;display:flex;align-items:center;gap:6px}
+.bulk-mode input{accent-color:#22d3ee}
+</style>
+</head>
+<body>
+<a class="back" href="/">&#8592; All Tools</a>
+<h1>Base64 Encode/Decode + More</h1>
+
+<div class="tabs">
+<div class="tab active" data-tab="base64">Base64</div>
+<div class="tab" data-tab="url">URL Encode</div>
+<div class="tab" data-tab="html">HTML Entities</div>
+<div class="tab" data-tab="hex">Hex</div>
+<div class="tab" data-tab="binary">Binary</div>
+<div class="tab" data-tab="rot13">ROT13</div>
+<div class="tab" data-tab="file">File Mode</div>
+</div>
+
+<div id="tab-base64" class="panel">
+<div class="label">Input</div>
+<textarea id="b64Input" placeholder="Enter text to encode...">Hello, FreeCodeStore!</textarea>
+<div class="toolbar">
+<button onclick="encode('base64')">Encode</button>
+<button onclick="decode('base64')">Decode</button>
+<button class="secondary" onclick="swap('base64')">Swap</button>
+<button class="secondary" onclick="copyResult('b64Output')">Copy</button>
+<label class="bulk-mode"><input type="checkbox" id="b64Bulk">Bulk (per line)</label>
+</div>
+<div class="label">Output</div>
+<textarea id="b64Output" readonly placeholder="Result will appear here..."></textarea>
+</div>
+
+<div id="tab-url" class="panel" style="display:none">
+<div class="label">Input</div>
+<textarea id="urlInput" placeholder="Enter text or URL...">https://example.com/path?q=hello world&lang=en</textarea>
+<div class="toolbar">
+<button onclick="encode('url')">Encode</button>
+<button onclick="decode('url')">Decode</button>
+<button class="secondary" onclick="swap('url')">Swap</button>
+<button class="secondary" onclick="copyResult('urlOutput')">Copy</button>
+</div>
+<div class="label">Output</div>
+<textarea id="urlOutput" readonly></textarea>
+</div>
+
+<div id="tab-html" class="panel" style="display:none">
+<div class="label">Input</div>
+<textarea id="htmlInput" placeholder="Enter HTML or text...">&lt;div class="test"&gt;Hello &amp; welcome&lt;/div&gt;</textarea>
+<div class="toolbar">
+<button onclick="encode('html')">Encode</button>
+<button onclick="decode('html')">Decode</button>
+<button class="secondary" onclick="swap('html')">Swap</button>
+<button class="secondary" onclick="copyResult('htmlOutput')">Copy</button>
+</div>
+<div class="label">Output</div>
+<textarea id="htmlOutput" readonly></textarea>
+</div>
+
+<div id="tab-hex" class="panel" style="display:none">
+<div class="label">Input</div>
+<textarea id="hexInput" placeholder="Enter text...">FreeCodeStore</textarea>
+<div class="toolbar">
+<button onclick="encode('hex')">To Hex</button>
+<button onclick="decode('hex')">From Hex</button>
+<button class="secondary" onclick="swap('hex')">Swap</button>
+<button class="secondary" onclick="copyResult('hexOutput')">Copy</button>
+</div>
+<div class="label">Output</div>
+<textarea id="hexOutput" readonly></textarea>
+</div>
+
+<div id="tab-binary" class="panel" style="display:none">
+<div class="label">Input</div>
+<textarea id="binInput" placeholder="Enter text...">Code</textarea>
+<div class="toolbar">
+<button onclick="encode('binary')">To Binary</button>
+<button onclick="decode('binary')">From Binary</button>
+<button class="secondary" onclick="swap('binary')">Swap</button>
+<button class="secondary" onclick="copyResult('binOutput')">Copy</button>
+</div>
+<div class="label">Output</div>
+<textarea id="binOutput" readonly></textarea>
+</div>
+
+<div id="tab-rot13" class="panel" style="display:none">
+<div class="label">Input</div>
+<textarea id="rot13Input" placeholder="Enter text...">Hello World</textarea>
+<div class="toolbar">
+<button onclick="encode('rot13')">ROT13</button>
+<button class="secondary" onclick="swap('rot13')">Swap</button>
+<button class="secondary" onclick="copyResult('rot13Output')">Copy</button>
+</div>
+<div class="label">Output</div>
+<textarea id="rot13Output" readonly></textarea>
+</div>
+
+<div id="tab-file" class="panel" style="display:none">
+<div class="file-drop" id="fileDrop">
+<p>Drop a file here or click to select</p>
+<input type="file" id="fileInput">
+</div>
+<div class="label">Base64 Data URL</div>
+<textarea id="fileOutput" readonly style="min-height:100px"></textarea>
+<div class="toolbar">
+<button class="secondary" onclick="copyResult('fileOutput')">Copy</button>
+</div>
+<div class="preview" id="imagePreview"></div>
+</div>
+
+<script>
+const tabs = document.querySelectorAll('.tab');
+tabs.forEach(t => t.onclick = () => {
+  tabs.forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  document.querySelectorAll('[id^="tab-"]').forEach(p => p.style.display = 'none');
+  document.getElementById('tab-' + t.dataset.tab).style.display = 'block';
+});
+
+function encode(type) {
+  const inputMap = {base64:'b64Input',url:'urlInput',html:'htmlInput',hex:'hexInput',binary:'binInput',rot13:'rot13Input'};
+  const outputMap = {base64:'b64Output',url:'urlOutput',html:'htmlOutput',hex:'hexOutput',binary:'binOutput',rot13:'rot13Output'};
+  const input = document.getElementById(inputMap[type]).value;
+  let result;
+  const bulk = type === 'base64' && document.getElementById('b64Bulk').checked;
+  const lines = bulk ? input.split('\n') : [input];
+
+  try {
+    result = lines.map(line => {
+      switch(type) {
+        case 'base64': return btoa(unescape(encodeURIComponent(line)));
+        case 'url': return encodeURIComponent(line);
+        case 'html': return line.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        case 'hex': return [...line].map(c => c.charCodeAt(0).toString(16).padStart(2,'0')).join(' ');
+        case 'binary': return [...line].map(c => c.charCodeAt(0).toString(2).padStart(8,'0')).join(' ');
+        case 'rot13': return line.replace(/[a-zA-Z]/g, c => String.fromCharCode(c.charCodeAt(0) + (c.toLowerCase() < 'n' ? 13 : -13)));
+      }
+    }).join('\n');
+  } catch(e) { result = 'Error: ' + e.message; }
+  document.getElementById(outputMap[type]).value = result;
+}
+
+function decode(type) {
+  const inputMap = {base64:'b64Input',url:'urlInput',html:'htmlInput',hex:'hexInput',binary:'binInput'};
+  const outputMap = {base64:'b64Output',url:'urlOutput',html:'htmlOutput',hex:'hexOutput',binary:'binOutput'};
+  const input = document.getElementById(inputMap[type]).value;
+  let result;
+  const bulk = type === 'base64' && document.getElementById('b64Bulk').checked;
+  const lines = bulk ? input.split('\n') : [input];
+
+  try {
+    result = lines.map(line => {
+      switch(type) {
+        case 'base64': return decodeURIComponent(escape(atob(line.trim())));
+        case 'url': return decodeURIComponent(line);
+        case 'html': { const el = document.createElement('div'); el.innerHTML = line; return el.textContent; }
+        case 'hex': return line.trim().split(/\s+/).map(h => String.fromCharCode(parseInt(h, 16))).join('');
+        case 'binary': return line.trim().split(/\s+/).map(b => String.fromCharCode(parseInt(b, 2))).join('');
+      }
+    }).join('\n');
+  } catch(e) { result = 'Error: ' + e.message; }
+  document.getElementById(outputMap[type]).value = result;
+}
+
+function swap(type) {
+  const inputMap = {base64:'b64Input',url:'urlInput',html:'htmlInput',hex:'hexInput',binary:'binInput',rot13:'rot13Input'};
+  const outputMap = {base64:'b64Output',url:'urlOutput',html:'htmlOutput',hex:'hexOutput',binary:'binOutput',rot13:'rot13Output'};
+  const inp = document.getElementById(inputMap[type]);
+  const out = document.getElementById(outputMap[type]);
+  const tmp = inp.value; inp.value = out.value; out.value = tmp;
+}
+
+function copyResult(id) { navigator.clipboard.writeText(document.getElementById(id).value); }
+
+// File mode
+const fileDrop = document.getElementById('fileDrop');
+const fileInput = document.getElementById('fileInput');
+fileDrop.onclick = () => fileInput.click();
+fileDrop.ondragover = e => { e.preventDefault(); fileDrop.classList.add('dragover'); };
+fileDrop.ondragleave = () => fileDrop.classList.remove('dragover');
+fileDrop.ondrop = e => { e.preventDefault(); fileDrop.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]); };
+fileInput.onchange = () => handleFile(fileInput.files[0]);
+
+function handleFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    document.getElementById('fileOutput').value = reader.result;
+    const preview = document.getElementById('imagePreview');
+    if (file.type.startsWith('image/')) {
+      preview.innerHTML = `<img src="${reader.result}" alt="Preview">`;
+    } else { preview.innerHTML = ''; }
+  };
+  reader.readAsDataURL(file);
+}
+
+// Auto-encode on load
+encode('base64');
+</script>
+<script src="/related.js"></script>
+</body>
+</html>

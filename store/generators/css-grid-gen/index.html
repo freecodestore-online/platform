@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSS Grid Generator — FreeCodeStore</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e7;font-family:'Inter',sans-serif;padding:24px;min-height:100vh}
+a{color:#22d3ee;text-decoration:none}
+a:hover{text-decoration:underline}
+.back{display:inline-block;margin-bottom:20px;font-size:14px}
+h1{font-size:24px;font-weight:600;margin-bottom:20px}
+.panel{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:16px;margin-bottom:16px}
+input,select{font-family:'JetBrains Mono',monospace;font-size:13px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:6px 10px;outline:none;width:auto}
+input:focus{border-color:#22d3ee}
+select{cursor:pointer;font-family:'Inter',sans-serif}
+button{font-family:'Inter',sans-serif;font-size:13px;background:#22d3ee;color:#09090b;font-weight:500;cursor:pointer;border:none;padding:8px 16px;border-radius:6px}
+button:hover{opacity:0.9}
+button.secondary{background:#27272a;color:#e4e4e7}
+button.small{font-size:11px;padding:4px 10px}
+.section-title{font-size:13px;font-weight:500;color:#71717a;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.controls-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.control-item{display:flex;flex-direction:column;gap:4px}
+.control-item label{font-size:11px;color:#71717a;text-transform:uppercase;letter-spacing:0.5px}
+.control-item input,.control-item select{width:100%}
+.grid-preview{border:1px solid #27272a;border-radius:6px;padding:16px;min-height:250px;display:grid;gap:8px;margin-bottom:16px}
+.grid-cell{background:#22d3ee11;border:1px dashed #22d3ee44;border-radius:4px;display:flex;align-items:center;justify-content:center;min-height:50px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#71717a;cursor:pointer;transition:background .15s}
+.grid-cell:hover{background:#22d3ee22}
+.grid-cell.selected{background:#22d3ee33;border-color:#22d3ee}
+.output{background:#09090b;border:1px solid #27272a;border-radius:6px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;white-space:pre-wrap;overflow-x:auto;max-height:400px;overflow-y:auto}
+.presets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:16px}
+.preset-btn{font-size:12px;padding:8px 10px;text-align:left;background:#09090b;border:1px solid #27272a;border-radius:4px;cursor:pointer;color:#e4e4e7;font-family:'Inter',sans-serif}
+.preset-btn:hover{border-color:#22d3ee}
+.tabs{display:flex;gap:4px;margin-bottom:12px}
+.tab{padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;background:#09090b;border:1px solid #27272a;color:#71717a;font-family:'Inter',sans-serif}
+.tab.active{background:#22d3ee;color:#09090b;border-color:#22d3ee}
+.size-row{display:flex;gap:4px;align-items:center;margin-bottom:6px}
+.size-row input{width:70px}
+.size-row select{width:60px;font-size:11px;padding:4px}
+.size-label{font-size:11px;color:#71717a;min-width:50px}
+.kw{color:#60a5fa}
+.str{color:#4ade80}
+.prop{color:#c084fc}
+.val{color:#fb923c}
+</style>
+</head>
+<body>
+<a class="back" href="/">&#8592; All Tools</a>
+<h1>CSS Grid Generator</h1>
+
+<div class="panel">
+<div class="section-title">Presets</div>
+<div class="presets-grid">
+<div class="preset-btn" onclick="loadPreset('dashboard')">Dashboard</div>
+<div class="preset-btn" onclick="loadPreset('blog')">Blog Layout</div>
+<div class="preset-btn" onclick="loadPreset('gallery')">Gallery</div>
+<div class="preset-btn" onclick="loadPreset('holy-grail')">Holy Grail</div>
+<div class="preset-btn" onclick="loadPreset('landing')">Landing Page</div>
+</div>
+</div>
+
+<div class="panel">
+<div class="section-title">Grid Settings</div>
+<div class="controls-grid">
+<div class="control-item"><label>Columns</label><input type="number" id="cols" value="3" min="1" max="12" onchange="updateGrid()"></div>
+<div class="control-item"><label>Rows</label><input type="number" id="rows" value="3" min="1" max="12" onchange="updateGrid()"></div>
+<div class="control-item"><label>Column Gap</label><input type="text" id="colGap" value="16px" onchange="updateGrid()"></div>
+<div class="control-item"><label>Row Gap</label><input type="text" id="rowGap" value="16px" onchange="updateGrid()"></div>
+</div>
+
+<div class="section-title" style="margin-top:16px">Column Sizes</div>
+<div id="colSizes"></div>
+
+<div class="section-title" style="margin-top:12px">Row Sizes</div>
+<div id="rowSizes"></div>
+</div>
+
+<div class="panel">
+<div class="section-title">Preview</div>
+<div class="grid-preview" id="gridPreview"></div>
+</div>
+
+<div class="row">
+<label style="font-size:13px;color:#71717a">Tailwind output:</label>
+<input type="checkbox" id="tailwind" onchange="updateOutput()" style="accent-color:#22d3ee;width:16px;height:16px">
+</div>
+
+<div class="tabs">
+<div class="tab active" data-tab="css">CSS</div>
+<div class="tab" data-tab="html">HTML</div>
+</div>
+
+<div id="tab-css" class="panel">
+<div class="row"><button class="small" onclick="copyCss()">Copy CSS</button></div>
+<div class="output" id="cssOutput"></div>
+</div>
+<div id="tab-html" class="panel" style="display:none">
+<div class="row"><button class="small" onclick="copyHtml()">Copy HTML</button></div>
+<div class="output" id="htmlOutput"></div>
+</div>
+
+<script>
+let colSizes = ['1fr','1fr','1fr'];
+let rowSizes = ['auto','auto','auto'];
+let cellNames = [];
+
+const presets = {
+  dashboard: {cols:4, rows:3, colSizes:['250px','1fr','1fr','300px'], rowSizes:['60px','1fr','40px'], colGap:'0px', rowGap:'0px', names:['header','header','header','header','sidebar','main','main','aside','footer','footer','footer','footer']},
+  blog: {cols:3, rows:3, colSizes:['1fr','2fr','1fr'], rowSizes:['auto','1fr','auto'], colGap:'24px', rowGap:'24px', names:['header','header','header','sidebar','article','toc','footer','footer','footer']},
+  gallery: {cols:4, rows:3, colSizes:['1fr','1fr','1fr','1fr'], rowSizes:['1fr','1fr','1fr'], colGap:'8px', rowGap:'8px', names:['img1','img2','img3','img4','img5','img6','img7','img8','img9','img10','img11','img12']},
+  'holy-grail': {cols:3, rows:3, colSizes:['200px','1fr','200px'], rowSizes:['auto','1fr','auto'], colGap:'0px', rowGap:'0px', names:['header','header','header','nav','content','aside','footer','footer','footer']},
+  landing: {cols:2, rows:4, colSizes:['1fr','1fr'], rowSizes:['80px','auto','auto','60px'], colGap:'32px', rowGap:'32px', names:['nav','nav','hero','hero-img','features','features','footer','footer']},
+};
+
+function loadPreset(name) {
+  const p = presets[name];
+  document.getElementById('cols').value = p.cols;
+  document.getElementById('rows').value = p.rows;
+  document.getElementById('colGap').value = p.colGap;
+  document.getElementById('rowGap').value = p.rowGap;
+  colSizes = [...p.colSizes];
+  rowSizes = [...p.rowSizes];
+  cellNames = [...p.names];
+  renderSizeInputs();
+  updateGrid();
+}
+
+function renderSizeInputs() {
+  const cols = parseInt(document.getElementById('cols').value);
+  const rows = parseInt(document.getElementById('rows').value);
+
+  while (colSizes.length < cols) colSizes.push('1fr');
+  while (rowSizes.length < rows) rowSizes.push('auto');
+  colSizes = colSizes.slice(0, cols);
+  rowSizes = rowSizes.slice(0, rows);
+
+  document.getElementById('colSizes').innerHTML = colSizes.map((s, i) => `<div class="size-row"><span class="size-label">Col ${i+1}</span><input value="${s}" onchange="colSizes[${i}]=this.value;updateGrid()"></div>`).join('');
+  document.getElementById('rowSizes').innerHTML = rowSizes.map((s, i) => `<div class="size-row"><span class="size-label">Row ${i+1}</span><input value="${s}" onchange="rowSizes[${i}]=this.value;updateGrid()"></div>`).join('');
+}
+
+function updateGrid() {
+  const cols = parseInt(document.getElementById('cols').value);
+  const rows = parseInt(document.getElementById('rows').value);
+  const colGap = document.getElementById('colGap').value;
+  const rowGap = document.getElementById('rowGap').value;
+
+  renderSizeInputs();
+
+  const total = cols * rows;
+  while (cellNames.length < total) cellNames.push('cell' + (cellNames.length + 1));
+  cellNames = cellNames.slice(0, total);
+
+  const preview = document.getElementById('gridPreview');
+  preview.style.gridTemplateColumns = colSizes.join(' ');
+  preview.style.gridTemplateRows = rowSizes.join(' ');
+  preview.style.columnGap = colGap;
+  preview.style.rowGap = rowGap;
+
+  preview.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'grid-cell';
+    cell.textContent = cellNames[i];
+    cell.onclick = () => {
+      const name = prompt('Area name:', cellNames[i]);
+      if (name !== null) { cellNames[i] = name; updateGrid(); }
+    };
+    preview.appendChild(cell);
+  }
+
+  updateOutput();
+}
+
+function updateOutput() {
+  const cols = parseInt(document.getElementById('cols').value);
+  const rows = parseInt(document.getElementById('rows').value);
+  const colGap = document.getElementById('colGap').value;
+  const rowGap = document.getElementById('rowGap').value;
+  const tailwind = document.getElementById('tailwind').checked;
+
+  // Build grid-template-areas
+  const areas = [];
+  for (let r = 0; r < rows; r++) {
+    const row = [];
+    for (let c = 0; c < cols; c++) row.push(cellNames[r * cols + c]);
+    areas.push('"' + row.join(' ') + '"');
+  }
+
+  // Check if areas have unique names worth using
+  const uniqueNames = [...new Set(cellNames)];
+  const useAreas = uniqueNames.length < cellNames.length; // has merged areas
+
+  if (tailwind) {
+    let tw = `.container {\n  @apply grid;\n  grid-template-columns: ${colSizes.join(' ')};\n  grid-template-rows: ${rowSizes.join(' ')};\n  gap: ${colGap === rowGap ? colGap : rowGap + ' ' + colGap};\n`;
+    if (useAreas) tw += `  grid-template-areas:\n    ${areas.join('\n    ')};\n`;
+    tw += `}\n`;
+    if (useAreas) {
+      uniqueNames.forEach(n => { tw += `\n.${n} {\n  grid-area: ${n};\n}`; });
+    }
+    document.getElementById('cssOutput').innerHTML = highlight(tw);
+    window._cssTxt = tw;
+  } else {
+    let css = `.container {\n  display: grid;\n  grid-template-columns: ${colSizes.join(' ')};\n  grid-template-rows: ${rowSizes.join(' ')};\n  gap: ${colGap === rowGap ? colGap : rowGap + ' ' + colGap};\n`;
+    if (useAreas) css += `  grid-template-areas:\n    ${areas.join('\n    ')};\n`;
+    css += `}\n`;
+    if (useAreas) {
+      uniqueNames.forEach(n => { css += `\n.${n} {\n  grid-area: ${n};\n}`; });
+    } else {
+      for (let i = 0; i < cellNames.length; i++) {
+        css += `\n.${cellNames[i]} {\n  /* grid-column / grid-row as needed */\n}`;
+      }
+    }
+    document.getElementById('cssOutput').innerHTML = highlight(css);
+    window._cssTxt = css;
+  }
+
+  // HTML
+  let html = '<div class="container">\n';
+  const done = new Set();
+  cellNames.forEach(n => {
+    if (done.has(n)) return;
+    done.add(n);
+    html += `  <div class="${n}">${n}</div>\n`;
+  });
+  html += '</div>';
+  document.getElementById('htmlOutput').textContent = html;
+  window._htmlTxt = html;
+}
+
+function highlight(css) {
+  return css.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/(\/\*[\s\S]*?\*\/)/g, '<span style="color:#71717a;font-style:italic">$1</span>')
+    .replace(/([a-z-]+)(\s*:)/g, '<span class="prop">$1</span>$2')
+    .replace(/(:\s*)([^;{\n]+)/g, '$1<span class="val">$2</span>')
+    .replace(/(\.[a-zA-Z_-][a-zA-Z0-9_-]*)/g, '<span class="kw">$1</span>')
+    .replace(/(@apply)/g, '<span style="color:#c084fc">$1</span>');
+}
+
+function copyCss() { navigator.clipboard.writeText(window._cssTxt || ''); }
+function copyHtml() { navigator.clipboard.writeText(window._htmlTxt || ''); }
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  document.querySelectorAll('[id^="tab-"]').forEach(p => p.style.display = 'none');
+  document.getElementById('tab-' + t.dataset.tab).style.display = 'block';
+});
+
+// Init
+cellNames = ['cell1','cell2','cell3','cell4','cell5','cell6','cell7','cell8','cell9'];
+renderSizeInputs();
+updateGrid();
+</script>
+<script src="/related.js"></script>
+</body>
+</html>

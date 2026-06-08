@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTTP Status Code Reference — FreeCodeStore</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e7;font-family:'Inter',sans-serif;padding:24px;min-height:100vh}
+a{color:#22d3ee;text-decoration:none}
+a:hover{text-decoration:underline}
+.back{display:inline-block;margin-bottom:20px;font-size:14px}
+h1{font-size:24px;font-weight:600;margin-bottom:20px}
+.panel{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:16px;margin-bottom:16px}
+input{font-family:'JetBrains Mono',monospace;font-size:14px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:10px 14px;outline:none;width:100%;margin-bottom:16px}
+input:focus{border-color:#22d3ee}
+button{font-family:'Inter',sans-serif;font-size:13px;background:#22d3ee;color:#09090b;font-weight:500;cursor:pointer;border:none;padding:8px 16px;border-radius:6px}
+button:hover{opacity:0.9}
+button.secondary{background:#27272a;color:#e4e4e7}
+.tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;background:#09090b;border:1px solid #27272a;color:#71717a;font-family:'Inter',sans-serif}
+.tab.active{background:#22d3ee;color:#09090b;border-color:#22d3ee}
+.section-title{font-size:13px;font-weight:500;color:#71717a;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}
+.code-card{background:#09090b;border:1px solid #27272a;border-radius:6px;padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.code-card:hover{border-color:#22d3ee}
+.code-card.expanded{border-color:#22d3ee}
+.code-header{display:flex;align-items:center;gap:12px}
+.code-num{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;min-width:40px}
+.code-name{font-weight:500;font-size:14px}
+.code-cat{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500}
+.cat-1xx{background:#3b82f622;color:#60a5fa;border:1px solid #3b82f644}
+.cat-2xx{background:#16a34a22;color:#4ade80;border:1px solid #16a34a44}
+.cat-3xx{background:#ca8a0422;color:#fbbf24;border:1px solid #ca8a0444}
+.cat-4xx{background:#dc262622;color:#f87171;border:1px solid #dc262644}
+.cat-5xx{background:#7c2d1222;color:#fca5a5;border:1px solid #7c2d1244}
+.code-details{display:none;margin-top:12px;padding-top:12px;border-top:1px solid #27272a;font-size:13px;line-height:1.7}
+.code-card.expanded .code-details{display:block}
+.detail-label{color:#71717a;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;margin-top:8px;margin-bottom:4px}
+.detail-label:first-child{margin-top:0}
+.code-example{background:#18181b;border-radius:4px;padding:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#a1a1aa;margin-top:4px}
+.copy-btn{font-size:11px;padding:4px 8px;margin-top:8px;background:#27272a;color:#e4e4e7;border:none;border-radius:4px;cursor:pointer;font-family:'JetBrains Mono',monospace}
+.copy-btn:hover{background:#3f3f46}
+.tree-panel{background:#09090b;border:1px solid #27272a;border-radius:8px;padding:16px;margin-bottom:16px}
+.tree-q{font-size:14px;font-weight:500;margin-bottom:12px;color:#22d3ee}
+.tree-options{display:flex;flex-direction:column;gap:6px}
+.tree-opt{background:#18181b;border:1px solid #27272a;border-radius:6px;padding:10px 14px;cursor:pointer;font-size:13px;transition:border-color .15s}
+.tree-opt:hover{border-color:#22d3ee}
+.tree-result{background:#18181b;border:1px solid #22d3ee;border-radius:6px;padding:12px;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:14px}
+.tree-back{font-size:12px;color:#71717a;cursor:pointer;margin-top:8px;display:inline-block}
+.tree-back:hover{color:#22d3ee}
+</style>
+</head>
+<body>
+<a class="back" href="/">&#8592; All Tools</a>
+<h1>HTTP Status Code Reference</h1>
+
+<input id="search" placeholder="Search by code number or name..." oninput="filterCodes()">
+
+<div class="tabs">
+<div class="tab active" data-tab="all">All</div>
+<div class="tab" data-tab="1xx">1xx Info</div>
+<div class="tab" data-tab="2xx">2xx Success</div>
+<div class="tab" data-tab="3xx">3xx Redirect</div>
+<div class="tab" data-tab="4xx">4xx Client Error</div>
+<div class="tab" data-tab="5xx">5xx Server Error</div>
+<div class="tab" data-tab="tree">Decision Tree</div>
+</div>
+
+<div id="codesContainer"></div>
+<div id="treeContainer" style="display:none"></div>
+
+<script>
+const codes = [
+  {code:100,name:'Continue',cat:'1xx',desc:'The server received the request headers. The client should proceed to send the body. Used with Expect: 100-continue header.',use:'When the client wants to check if the server will accept the request before sending a large body.',ex:'HTTP/1.1 100 Continue'},
+  {code:101,name:'Switching Protocols',cat:'1xx',desc:'The server is switching protocols as requested by the client via an Upgrade header.',use:'WebSocket handshake. The server agrees to switch from HTTP to WebSocket.',ex:'HTTP/1.1 101 Switching Protocols\nUpgrade: websocket'},
+  {code:103,name:'Early Hints',cat:'1xx',desc:'Used to return response headers before the final response. Allows preloading resources.',use:'Send Link headers early so the browser can start loading CSS/JS while the server prepares the full response.',ex:'HTTP/1.1 103 Early Hints\nLink: </style.css>; rel=preload; as=style'},
+  {code:200,name:'OK',cat:'2xx',desc:'The request succeeded. The meaning depends on the method: GET returns the resource, POST returns the result of the action.',use:'Standard success response for GET, POST, PUT, PATCH when the operation completed normally.',ex:'HTTP/1.1 200 OK\nContent-Type: application/json\n\n{"status": "success"}'},
+  {code:201,name:'Created',cat:'2xx',desc:'The request succeeded and a new resource was created. Typically includes a Location header pointing to the new resource.',use:'After a successful POST that creates a new entity (user, order, record). Return with Location header.',ex:'HTTP/1.1 201 Created\nLocation: /api/users/42\n\n{"id": 42, "name": "John"}'},
+  {code:204,name:'No Content',cat:'2xx',desc:'The request succeeded but there is no content to return in the body. The client should not navigate away.',use:'After a successful DELETE or PUT where no response body is needed.',ex:'HTTP/1.1 204 No Content'},
+  {code:206,name:'Partial Content',cat:'2xx',desc:'The server is delivering only part of the resource due to a Range header sent by the client.',use:'Video/audio streaming, resumable downloads. Client requests bytes 0-1023 of a large file.',ex:'HTTP/1.1 206 Partial Content\nContent-Range: bytes 0-1023/8192'},
+  {code:301,name:'Moved Permanently',cat:'3xx',desc:'The requested resource has been permanently moved to a new URL. All future requests should use the new URL.',use:'When a page or API endpoint is permanently relocated. Search engines update their index.',ex:'HTTP/1.1 301 Moved Permanently\nLocation: https://new-site.com/page'},
+  {code:302,name:'Found',cat:'3xx',desc:'The resource temporarily resides at a different URL. The client should continue using the original URL for future requests.',use:'Temporary redirects during maintenance or A/B testing. Post-login redirect.',ex:'HTTP/1.1 302 Found\nLocation: /dashboard'},
+  {code:304,name:'Not Modified',cat:'3xx',desc:'The resource has not been modified since the last request. The client can use its cached version.',use:'Browser caching. Client sends If-None-Match or If-Modified-Since, server confirms cache is still valid.',ex:'HTTP/1.1 304 Not Modified\nETag: "abc123"'},
+  {code:307,name:'Temporary Redirect',cat:'3xx',desc:'Like 302 but guarantees the method and body will not change. A POST redirect stays POST.',use:'When you need a temporary redirect that preserves the HTTP method (unlike 302 which may change POST to GET).',ex:'HTTP/1.1 307 Temporary Redirect\nLocation: /new-endpoint'},
+  {code:308,name:'Permanent Redirect',cat:'3xx',desc:'Like 301 but guarantees the method and body will not change.',use:'Permanent redirect that must preserve the HTTP method.',ex:'HTTP/1.1 308 Permanent Redirect\nLocation: /v2/resource'},
+  {code:400,name:'Bad Request',cat:'4xx',desc:'The server cannot process the request due to a client error: malformed syntax, invalid parameters, or deceptive routing.',use:'Invalid JSON body, missing required fields, type mismatches in query params.',ex:'HTTP/1.1 400 Bad Request\n\n{"error": "Invalid email format"}'},
+  {code:401,name:'Unauthorized',cat:'4xx',desc:'Authentication is required and has failed or has not been provided. The client must authenticate itself.',use:'Missing or expired auth token, invalid credentials. Should include WWW-Authenticate header.',ex:'HTTP/1.1 401 Unauthorized\nWWW-Authenticate: Bearer'},
+  {code:403,name:'Forbidden',cat:'4xx',desc:'The server understood the request but refuses to authorize it. Authentication will not help.',use:'User is logged in but lacks permission to access this resource. Admin-only endpoints.',ex:'HTTP/1.1 403 Forbidden\n\n{"error": "Insufficient permissions"}'},
+  {code:404,name:'Not Found',cat:'4xx',desc:'The server cannot find the requested resource. The URL is not recognized.',use:'Resource does not exist, invalid route, deleted entity.',ex:'HTTP/1.1 404 Not Found\n\n{"error": "User not found"}'},
+  {code:405,name:'Method Not Allowed',cat:'4xx',desc:'The HTTP method is not supported for the requested resource. Should include Allow header.',use:'Sending POST to a read-only endpoint, DELETE to an endpoint that only supports GET.',ex:'HTTP/1.1 405 Method Not Allowed\nAllow: GET, HEAD'},
+  {code:409,name:'Conflict',cat:'4xx',desc:'The request conflicts with the current state of the server. Often a duplicate or version conflict.',use:'Creating a resource with a duplicate key, editing a resource that was modified by another request.',ex:'HTTP/1.1 409 Conflict\n\n{"error": "Username already taken"}'},
+  {code:410,name:'Gone',cat:'4xx',desc:'The resource was once here but has been intentionally removed and will not return.',use:'Permanently deleted resources. Unlike 404, this confirms the resource existed and was deliberately removed.',ex:'HTTP/1.1 410 Gone'},
+  {code:415,name:'Unsupported Media Type',cat:'4xx',desc:'The server refuses the request because the payload format is unsupported.',use:'Sending XML to an endpoint that only accepts JSON, or uploading an unsupported file type.',ex:'HTTP/1.1 415 Unsupported Media Type'},
+  {code:422,name:'Unprocessable Entity',cat:'4xx',desc:'The server understands the content type and syntax but cannot process the instructions. Semantic errors.',use:'Valid JSON but business logic fails: invalid field values, referencing nonexistent related records.',ex:'HTTP/1.1 422 Unprocessable Entity\n\n{"errors": [{"field": "age", "message": "must be positive"}]}'},
+  {code:429,name:'Too Many Requests',cat:'4xx',desc:'The user has sent too many requests in a given time. Rate limiting.',use:'API rate limiting. Should include Retry-After header telling client when to retry.',ex:'HTTP/1.1 429 Too Many Requests\nRetry-After: 60'},
+  {code:500,name:'Internal Server Error',cat:'5xx',desc:'The server encountered an unexpected condition that prevented it from fulfilling the request.',use:'Unhandled exceptions, database crashes, null pointer errors. Generic server-side failure.',ex:'HTTP/1.1 500 Internal Server Error\n\n{"error": "Something went wrong"}'},
+  {code:502,name:'Bad Gateway',cat:'5xx',desc:'The server, acting as a gateway or proxy, received an invalid response from the upstream server.',use:'Reverse proxy (nginx, CDN) cannot reach the backend. Backend returned malformed response.',ex:'HTTP/1.1 502 Bad Gateway'},
+  {code:503,name:'Service Unavailable',cat:'5xx',desc:'The server is not ready to handle the request. Usually temporary: maintenance or overload.',use:'Planned maintenance, server overload, dependency down. Should include Retry-After header.',ex:'HTTP/1.1 503 Service Unavailable\nRetry-After: 300'},
+  {code:504,name:'Gateway Timeout',cat:'5xx',desc:'The server, acting as a gateway, did not get a response from the upstream server in time.',use:'Backend is too slow. Proxy timeout exceeded waiting for the application server.',ex:'HTTP/1.1 504 Gateway Timeout'},
+];
+
+const catLabels = {'1xx':'Informational','2xx':'Success','3xx':'Redirection','4xx':'Client Error','5xx':'Server Error'};
+let activeFilter = 'all';
+
+function renderCodes() {
+  const container = document.getElementById('codesContainer');
+  const search = document.getElementById('search').value.toLowerCase();
+  const filtered = codes.filter(c => {
+    if (activeFilter !== 'all' && c.cat !== activeFilter) return false;
+    if (search && !String(c.code).includes(search) && !c.name.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  container.innerHTML = filtered.map(c => `
+    <div class="code-card" onclick="this.classList.toggle('expanded')">
+      <div class="code-header">
+        <span class="code-num" style="color:${catColor(c.cat)}">${c.code}</span>
+        <span class="code-name">${c.name}</span>
+        <span class="code-cat cat-${c.cat}">${c.cat}</span>
+      </div>
+      <div class="code-details">
+        <div class="detail-label">Description</div>
+        <div>${c.desc}</div>
+        <div class="detail-label">When to use</div>
+        <div>${c.use}</div>
+        <div class="detail-label">Example Response</div>
+        <div class="code-example">${escapeHtml(c.ex)}</div>
+        <button class="copy-btn" onclick="event.stopPropagation();navigator.clipboard.writeText('// HTTP ${c.code} ${c.name}\\n// ${c.desc}')">Copy as comment</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function catColor(cat) {
+  return {
+    '1xx':'#60a5fa','2xx':'#4ade80','3xx':'#fbbf24','4xx':'#f87171','5xx':'#fca5a5'
+  }[cat];
+}
+
+function filterCodes() { renderCodes(); }
+
+function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  const tab = t.dataset.tab;
+  if (tab === 'tree') {
+    document.getElementById('codesContainer').style.display = 'none';
+    document.getElementById('search').style.display = 'none';
+    document.getElementById('treeContainer').style.display = 'block';
+    startTree();
+  } else {
+    document.getElementById('codesContainer').style.display = 'block';
+    document.getElementById('search').style.display = 'block';
+    document.getElementById('treeContainer').style.display = 'none';
+    activeFilter = tab;
+    renderCodes();
+  }
+});
+
+// Decision tree
+const tree = {
+  q: 'Did the request succeed?',
+  yes: {
+    q: 'Was a new resource created?',
+    yes: {result: '201 Created'},
+    no: {
+      q: 'Is there content to return?',
+      yes: {
+        q: 'Is it a partial response (range request)?',
+        yes: {result: '206 Partial Content'},
+        no: {result: '200 OK'}
+      },
+      no: {result: '204 No Content'}
+    }
+  },
+  no: {
+    q: 'Is it the client\'s fault?',
+    yes: {
+      q: 'Is the user authenticated?',
+      yes: {
+        q: 'Does the user have permission?',
+        yes: {
+          q: 'Does the resource exist?',
+          yes: {
+            q: 'Is there a conflict with current state?',
+            yes: {result: '409 Conflict'},
+            no: {
+              q: 'Is the input syntactically valid but semantically wrong?',
+              yes: {result: '422 Unprocessable Entity'},
+              no: {result: '400 Bad Request'}
+            }
+          },
+          no: {
+            q: 'Did the resource used to exist?',
+            yes: {result: '410 Gone'},
+            no: {result: '404 Not Found'}
+          }
+        },
+        no: {result: '403 Forbidden'}
+      },
+      no: {result: '401 Unauthorized'}
+    },
+    no: {
+      q: 'Is the server overloaded or in maintenance?',
+      yes: {result: '503 Service Unavailable'},
+      no: {
+        q: 'Is the server a proxy/gateway?',
+        yes: {
+          q: 'Did the upstream respond at all?',
+          yes: {result: '502 Bad Gateway'},
+          no: {result: '504 Gateway Timeout'}
+        },
+        no: {result: '500 Internal Server Error'}
+      }
+    }
+  }
+};
+
+let treePath = [];
+
+function startTree() {
+  treePath = [];
+  renderTree(tree);
+}
+
+function renderTree(node) {
+  const container = document.getElementById('treeContainer');
+  if (node.result) {
+    container.innerHTML = `<div class="tree-panel"><div class="tree-q">Result:</div><div class="tree-result">${node.result}</div><div class="tree-back" onclick="goBack()">&#8592; Start over</div></div>`;
+    return;
+  }
+  container.innerHTML = `
+    <div class="tree-panel">
+      <div class="tree-q">${node.q}</div>
+      <div class="tree-options">
+        <div class="tree-opt" onclick="treeNext('yes')">Yes</div>
+        <div class="tree-opt" onclick="treeNext('no')">No</div>
+      </div>
+      ${treePath.length ? '<div class="tree-back" onclick="goBack()">&#8592; Go back</div>' : ''}
+    </div>`;
+}
+
+function treeNext(choice) {
+  let node = tree;
+  for (const p of treePath) node = node[p];
+  treePath.push(choice);
+  renderTree(node[choice]);
+}
+
+function goBack() {
+  if (treePath.length === 0) return;
+  treePath.pop();
+  let node = tree;
+  for (const p of treePath) node = node[p];
+  renderTree(node);
+}
+
+renderCodes();
+</script>
+<script src="/related.js"></script>
+</body>
+</html>

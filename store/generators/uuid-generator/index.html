@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UUID/ID Generator — FreeCodeStore</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e7;font-family:'Inter',sans-serif;padding:24px;min-height:100vh}
+a{color:#22d3ee;text-decoration:none}a:hover{text-decoration:underline}
+.back{display:inline-block;margin-bottom:20px;font-size:14px}
+h1{font-size:24px;font-weight:600;margin-bottom:20px}
+.panel{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:16px;margin-bottom:16px}
+.tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;background:#09090b;border:1px solid #27272a;color:#71717a;font-weight:500}
+.tab.active{background:#22d3ee;color:#09090b;border-color:#22d3ee}
+button{font-family:'Inter',sans-serif;font-size:13px;background:#22d3ee;color:#09090b;font-weight:500;cursor:pointer;border:none;padding:8px 14px;border-radius:6px}
+button:hover{opacity:0.9}
+button.secondary{background:#27272a;color:#e4e4e7}
+button.copy-btn{background:none;color:#71717a;padding:4px 8px;font-size:12px;border:1px solid #27272a}
+button.copy-btn:hover{color:#22d3ee;border-color:#22d3ee}
+input,select{font-family:'Inter',sans-serif;font-size:13px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:8px 12px;outline:none}
+input:focus{border-color:#22d3ee}
+.toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.label{font-size:12px;color:#71717a;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;margin-top:12px}
+.id-list{background:#09090b;border:1px solid #27272a;border-radius:6px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:13px;max-height:400px;overflow-y:auto;line-height:1.8}
+.id-row{display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #18181b}
+.id-row:last-child{border-bottom:none}
+.id-value{word-break:break-all}
+.format-options{display:flex;gap:12px;align-items:center;font-size:13px;color:#71717a}
+.format-options label{display:flex;align-items:center;gap:4px;cursor:pointer}
+.format-options input[type=radio]{accent-color:#22d3ee}
+.parse-result{background:#09090b;border:1px solid #27272a;border-radius:6px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.8}
+.parse-row{display:flex;gap:12px;padding:4px 0;border-bottom:1px solid #18181b}
+.parse-row:last-child{border-bottom:none}
+.parse-key{color:#71717a;min-width:120px}
+.parse-val{color:#22d3ee}
+.custom-section{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.count-input{width:80px}
+</style>
+</head>
+<body>
+<a class="back" href="/">&#8592; All Tools</a>
+<h1>UUID/ID Generator</h1>
+
+<div class="tabs">
+<div class="tab active" data-tab="generate">Generate</div>
+<div class="tab" data-tab="parse">Parse</div>
+<div class="tab" data-tab="custom">Custom</div>
+</div>
+
+<div id="tab-generate" class="panel">
+<div class="toolbar">
+<select id="idType">
+<option value="uuidv4">UUID v4</option>
+<option value="uuidv7">UUID v7</option>
+<option value="ulid">ULID</option>
+<option value="nanoid">nanoid</option>
+<option value="cuid">CUID-like</option>
+<option value="objectid">ObjectId</option>
+</select>
+<span style="color:#71717a;font-size:13px">Count:</span>
+<input type="number" id="count" class="count-input" value="5" min="1" max="100">
+<div class="format-options">
+<label><input type="radio" name="format" value="lower" checked>lowercase</label>
+<label><input type="radio" name="format" value="upper">UPPERCASE</label>
+<label><input type="radio" name="format" value="nodash">no dashes</label>
+</div>
+</div>
+<div class="toolbar">
+<button onclick="generate()">Generate</button>
+<button class="secondary" onclick="copyAll()">Copy All</button>
+</div>
+<div class="id-list" id="idList"></div>
+</div>
+
+<div id="tab-parse" class="panel" style="display:none">
+<div class="label">Paste UUID to parse</div>
+<input type="text" id="parseInput" style="width:100%" placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000">
+<div class="toolbar" style="margin-top:8px">
+<button onclick="parseUUID()">Parse</button>
+</div>
+<div class="parse-result" id="parseResult"></div>
+</div>
+
+<div id="tab-custom" class="panel" style="display:none">
+<div class="label">Custom Alphabet</div>
+<div class="custom-section">
+<input type="text" id="customAlphabet" value="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" style="flex:1;min-width:200px" placeholder="Characters to use...">
+<span style="color:#71717a;font-size:13px">Length:</span>
+<input type="number" id="customLength" class="count-input" value="21" min="1" max="256">
+<span style="color:#71717a;font-size:13px">Count:</span>
+<input type="number" id="customCount" class="count-input" value="5" min="1" max="100">
+</div>
+<div class="toolbar">
+<button onclick="generateCustom()">Generate</button>
+<button class="secondary" onclick="document.getElementById('customAlphabet').value='0123456789abcdef'">Hex</button>
+<button class="secondary" onclick="document.getElementById('customAlphabet').value='0123456789'">Numeric</button>
+<button class="secondary" onclick="document.getElementById('customAlphabet').value='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'">Alpha</button>
+<button class="secondary" onclick="copyAll()">Copy All</button>
+</div>
+<div class="id-list" id="customList"></div>
+</div>
+
+<script>
+const tabs = document.querySelectorAll('.tab');
+tabs.forEach(t => t.onclick = () => {
+  tabs.forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  document.querySelectorAll('[id^="tab-"]').forEach(p => p.style.display = 'none');
+  document.getElementById('tab-' + t.dataset.tab).style.display = 'block';
+});
+
+function uuidv4() {
+  return crypto.randomUUID();
+}
+
+function uuidv7() {
+  const now = Date.now();
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  // Timestamp in first 48 bits
+  const ms = BigInt(now);
+  bytes[0] = Number((ms >> 40n) & 0xFFn);
+  bytes[1] = Number((ms >> 32n) & 0xFFn);
+  bytes[2] = Number((ms >> 24n) & 0xFFn);
+  bytes[3] = Number((ms >> 16n) & 0xFFn);
+  bytes[4] = Number((ms >> 8n) & 0xFFn);
+  bytes[5] = Number(ms & 0xFFn);
+  // Version 7
+  bytes[6] = (bytes[6] & 0x0F) | 0x70;
+  // Variant 10
+  bytes[8] = (bytes[8] & 0x3F) | 0x80;
+  const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+}
+
+function ulid() {
+  const ENCODING = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+  const now = Date.now();
+  let str = '';
+  // Time component (10 chars)
+  let t = now;
+  for (let i = 9; i >= 0; i--) { str = ENCODING[t % 32] + str; t = Math.floor(t / 32); }
+  // Random component (16 chars)
+  for (let i = 0; i < 16; i++) str += ENCODING[Math.floor(Math.random() * 32)];
+  return str;
+}
+
+function nanoid(size = 21) {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-';
+  const bytes = crypto.getRandomValues(new Uint8Array(size));
+  return Array.from(bytes).map(b => alphabet[b & 63]).join('');
+}
+
+function cuid() {
+  const ts = Date.now().toString(36);
+  const rnd = Math.random().toString(36).slice(2, 10);
+  const rnd2 = Math.random().toString(36).slice(2, 6);
+  return 'c' + ts + rnd + rnd2;
+}
+
+function objectId() {
+  const ts = Math.floor(Date.now() / 1000).toString(16).padStart(8, '0');
+  const rnd = Array.from(crypto.getRandomValues(new Uint8Array(8))).map(b => b.toString(16).padStart(2, '0')).join('');
+  return ts + rnd;
+}
+
+function formatId(id) {
+  const fmt = document.querySelector('input[name="format"]:checked').value;
+  if (fmt === 'upper') return id.toUpperCase();
+  if (fmt === 'nodash') return id.replace(/-/g, '');
+  return id.toLowerCase();
+}
+
+function generate() {
+  const type = document.getElementById('idType').value;
+  const count = Math.min(100, Math.max(1, parseInt(document.getElementById('count').value) || 5));
+  const generators = { uuidv4, uuidv7, ulid, nanoid, cuid, objectid: objectId };
+  const ids = [];
+  for (let i = 0; i < count; i++) ids.push(formatId(generators[type]()));
+  renderIds(ids, 'idList');
+}
+
+function generateCustom() {
+  const alphabet = document.getElementById('customAlphabet').value;
+  const length = Math.min(256, Math.max(1, parseInt(document.getElementById('customLength').value) || 21));
+  const count = Math.min(100, Math.max(1, parseInt(document.getElementById('customCount').value) || 5));
+  if (!alphabet) return;
+  const ids = [];
+  for (let i = 0; i < count; i++) {
+    const bytes = crypto.getRandomValues(new Uint8Array(length));
+    ids.push(Array.from(bytes).map(b => alphabet[b % alphabet.length]).join(''));
+  }
+  renderIds(ids, 'customList');
+}
+
+function renderIds(ids, containerId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = ids.map(id =>
+    `<div class="id-row"><span class="id-value">${id}</span><button class="copy-btn" onclick="navigator.clipboard.writeText('${id}')">Copy</button></div>`
+  ).join('');
+}
+
+function copyAll() {
+  const activeList = document.querySelector('[id^="tab-"]:not([style*="display: none"]) .id-list, [id^="tab-"]:not([style*="display:none"]) .id-list');
+  if (!activeList) return;
+  const ids = [...activeList.querySelectorAll('.id-value')].map(el => el.textContent);
+  navigator.clipboard.writeText(ids.join('\n'));
+}
+
+function parseUUID() {
+  const input = document.getElementById('parseInput').value.trim();
+  const result = document.getElementById('parseResult');
+  if (!input) { result.innerHTML = ''; return; }
+
+  const clean = input.replace(/-/g, '').toLowerCase();
+  const rows = [];
+
+  if (clean.length === 32) {
+    // UUID format
+    const version = parseInt(clean[12], 16);
+    const variantBits = parseInt(clean[16], 16);
+    let variant = 'Unknown';
+    if ((variantBits & 0x8) === 0) variant = 'NCS (reserved)';
+    else if ((variantBits & 0xC) === 0x8) variant = 'RFC 4122';
+    else if ((variantBits & 0xE) === 0xC) variant = 'Microsoft';
+    else variant = 'Future (reserved)';
+
+    rows.push({key: 'Format', val: 'UUID'});
+    rows.push({key: 'Version', val: `${version} (${['','Time-based','DCE','MD5 hash','Random','SHA-1 hash','','Timestamp+Random'][version] || 'Unknown'})`});
+    rows.push({key: 'Variant', val: variant});
+    rows.push({key: 'Hex', val: clean});
+    rows.push({key: 'Formatted', val: `${clean.slice(0,8)}-${clean.slice(8,12)}-${clean.slice(12,16)}-${clean.slice(16,20)}-${clean.slice(20)}`});
+
+    if (version === 7) {
+      const tsHex = clean.slice(0, 12);
+      const ts = parseInt(tsHex, 16);
+      rows.push({key: 'Timestamp', val: `${ts} (${new Date(ts).toISOString()})`});
+    }
+    if (version === 1) {
+      const tsHex = clean.slice(13, 16) + clean.slice(8, 12) + clean.slice(0, 8);
+      const ts100ns = parseInt(tsHex, 16);
+      const epochMs = (ts100ns - 122192928000000000) / 10000;
+      rows.push({key: 'Timestamp', val: `${new Date(epochMs).toISOString()}`});
+    }
+  } else if (clean.length === 26 && /^[0-9A-HJKMNP-TV-Z]{26}$/i.test(input)) {
+    rows.push({key: 'Format', val: 'ULID'});
+    const ENCODING = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+    let ts = 0;
+    for (let i = 0; i < 10; i++) ts = ts * 32 + ENCODING.indexOf(input[i].toUpperCase());
+    rows.push({key: 'Timestamp', val: `${ts} (${new Date(ts).toISOString()})`});
+  } else if (clean.length === 24 && /^[0-9a-f]{24}$/.test(clean)) {
+    rows.push({key: 'Format', val: 'ObjectId'});
+    const ts = parseInt(clean.slice(0, 8), 16);
+    rows.push({key: 'Timestamp', val: `${ts} (${new Date(ts * 1000).toISOString()})`});
+  } else {
+    rows.push({key: 'Format', val: 'Unknown'});
+    rows.push({key: 'Length', val: input.length});
+  }
+
+  result.innerHTML = rows.map(r => `<div class="parse-row"><span class="parse-key">${r.key}</span><span class="parse-val">${r.val}</span></div>`).join('');
+}
+
+// Generate on load
+generate();
+</script>
+<script src="/related.js"></script>
+</body>
+</html>

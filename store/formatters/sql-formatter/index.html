@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL Formatter &amp; Playground — FreeCodeStore</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e7;font-family:'Inter',sans-serif;padding:24px;min-height:100vh}
+a{color:#22d3ee;text-decoration:none}
+a:hover{text-decoration:underline}
+.back{display:inline-block;margin-bottom:20px;font-size:14px}
+h1{font-size:24px;font-weight:600;margin-bottom:20px}
+.panel{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:16px;margin-bottom:16px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+textarea{font-family:'JetBrains Mono',monospace;font-size:14px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:12px;outline:none;width:100%;resize:vertical;min-height:180px;line-height:1.6}
+textarea:focus{border-color:#22d3ee}
+button{font-family:'Inter',sans-serif;font-size:13px;background:#22d3ee;color:#09090b;font-weight:500;cursor:pointer;border:none;padding:8px 16px;border-radius:6px}
+button:hover{opacity:0.9}
+button.secondary{background:#27272a;color:#e4e4e7}
+.section-title{font-size:13px;font-weight:500;color:#71717a;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
+.output{background:#09090b;border:1px solid #27272a;border-radius:6px;padding:12px;min-height:180px;font-family:'JetBrains Mono',monospace;font-size:14px;line-height:1.6;white-space:pre-wrap;overflow-x:auto}
+.tabs{display:flex;gap:4px;margin-bottom:12px}
+.tab{padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;background:#09090b;border:1px solid #27272a;color:#71717a;font-family:'Inter',sans-serif}
+.tab.active{background:#22d3ee;color:#09090b;border-color:#22d3ee}
+.presets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:12px}
+.preset-btn{font-size:12px;padding:8px 10px;text-align:left;background:#09090b;border:1px solid #27272a;border-radius:4px;cursor:pointer;color:#e4e4e7;font-family:'Inter',sans-serif}
+.preset-btn:hover{border-color:#22d3ee}
+.kw{color:#60a5fa}
+.str{color:#4ade80}
+.num{color:#fb923c}
+.fn{color:#c084fc}
+.op{color:#71717a}
+.explain-item{padding:6px 0;border-bottom:1px solid #27272a;font-size:13px}
+.explain-item:last-child{border-bottom:none}
+.explain-label{color:#22d3ee;font-weight:500;font-family:'JetBrains Mono',monospace}
+.explain-desc{color:#a1a1aa;margin-top:2px}
+.stats{font-size:12px;color:#71717a;margin-top:8px}
+</style>
+</head>
+<body>
+<a class="back" href="/">&#8592; All Tools</a>
+<h1>SQL Formatter &amp; Playground</h1>
+
+<div class="panel">
+<div class="section-title">Input SQL</div>
+<textarea id="input" placeholder="Paste your SQL query here...">SELECT u.id, u.name, u.email, o.total FROM users u INNER JOIN orders o ON u.id = o.user_id WHERE o.total > 100 AND u.status = 'active' ORDER BY o.total DESC LIMIT 10;</textarea>
+</div>
+
+<div class="row">
+<button onclick="format()">Format</button>
+<button class="secondary" onclick="minify()">Minify</button>
+<button class="secondary" onclick="copyOutput()">Copy Output</button>
+</div>
+
+<div class="tabs">
+<div class="tab active" data-tab="formatted">Formatted</div>
+<div class="tab" data-tab="explain">Explain</div>
+<div class="tab" data-tab="presets">Presets</div>
+</div>
+
+<div id="tab-formatted" class="panel">
+<div class="section-title">Output</div>
+<div class="output" id="output"></div>
+<div class="stats" id="stats"></div>
+</div>
+
+<div id="tab-explain" class="panel" style="display:none">
+<div class="section-title">Query Breakdown</div>
+<div id="explainOutput"></div>
+</div>
+
+<div id="tab-presets" class="panel" style="display:none">
+<div class="section-title">Common Query Templates</div>
+<div class="presets-grid" id="presetsGrid"></div>
+</div>
+
+<script>
+const KEYWORDS = ['SELECT','FROM','WHERE','JOIN','INNER JOIN','LEFT JOIN','RIGHT JOIN','FULL JOIN','CROSS JOIN','ON','AND','OR','NOT','IN','EXISTS','BETWEEN','LIKE','IS NULL','IS NOT NULL','ORDER BY','GROUP BY','HAVING','LIMIT','OFFSET','INSERT INTO','VALUES','UPDATE','SET','DELETE FROM','CREATE TABLE','ALTER TABLE','DROP TABLE','CREATE INDEX','DROP INDEX','UNION','UNION ALL','DISTINCT','AS','CASE','WHEN','THEN','ELSE','END','COUNT','SUM','AVG','MIN','MAX','NULL','TRUE','FALSE','PRIMARY KEY','FOREIGN KEY','REFERENCES','DEFAULT','NOT NULL','UNIQUE','CHECK','INDEX','CASCADE','RETURNING'];
+const MAJOR_CLAUSES = ['SELECT','FROM','WHERE','JOIN','INNER JOIN','LEFT JOIN','RIGHT JOIN','FULL JOIN','CROSS JOIN','ON','ORDER BY','GROUP BY','HAVING','LIMIT','OFFSET','INSERT INTO','VALUES','UPDATE','SET','DELETE FROM','CREATE TABLE','ALTER TABLE','DROP TABLE','UNION','UNION ALL','RETURNING'];
+
+function tokenize(sql) {
+  const tokens = [];
+  let i = 0;
+  while (i < sql.length) {
+    if (/\s/.test(sql[i])) { i++; continue; }
+    if (sql[i] === "'" || sql[i] === '"') {
+      const q = sql[i]; let s = q; i++;
+      while (i < sql.length && sql[i] !== q) { if (sql[i] === '\\') { s += sql[i++]; } s += sql[i++]; }
+      s += q; i++;
+      tokens.push({type:'string',value:s});
+    } else if (sql[i] === '-' && sql[i+1] === '-') {
+      let c = ''; while (i < sql.length && sql[i] !== '\n') c += sql[i++];
+      tokens.push({type:'comment',value:c});
+    } else if (sql[i] === '/' && sql[i+1] === '*') {
+      let c = ''; while (i < sql.length && !(sql[i] === '*' && sql[i+1] === '/')) c += sql[i++];
+      c += '*/'; i += 2;
+      tokens.push({type:'comment',value:c});
+    } else if (/[0-9]/.test(sql[i])) {
+      let n = ''; while (i < sql.length && /[0-9.]/.test(sql[i])) n += sql[i++];
+      tokens.push({type:'number',value:n});
+    } else if (/[a-zA-Z_]/.test(sql[i])) {
+      let w = ''; while (i < sql.length && /[a-zA-Z0-9_.]/.test(sql[i])) w += sql[i++];
+      const upper = w.toUpperCase();
+      // Check for two-word keywords
+      let peek = i; while (peek < sql.length && sql[peek] === ' ') peek++;
+      let nextWord = ''; let pp = peek; while (pp < sql.length && /[a-zA-Z_]/.test(sql[pp])) nextWord += sql[pp++];
+      const combo = upper + ' ' + nextWord.toUpperCase();
+      if (KEYWORDS.includes(combo)) {
+        tokens.push({type:'keyword',value:combo});
+        i = pp;
+      } else if (KEYWORDS.includes(upper)) {
+        tokens.push({type:'keyword',value:upper});
+      } else {
+        tokens.push({type:'identifier',value:w});
+      }
+    } else {
+      tokens.push({type:'symbol',value:sql[i]}); i++;
+    }
+  }
+  return tokens;
+}
+
+function format() {
+  const sql = document.getElementById('input').value.trim();
+  if (!sql) return;
+  const tokens = tokenize(sql);
+  let result = '';
+  let indent = 0;
+  const indentStr = '  ';
+
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (t.type === 'keyword' && MAJOR_CLAUSES.includes(t.value)) {
+      if (t.value === 'ON' || t.value === 'AND' || t.value === 'OR') {
+        result += '\n' + indentStr.repeat(indent + 1) + t.value;
+      } else if (t.value === 'SELECT' || t.value === 'INSERT INTO' || t.value === 'UPDATE' || t.value === 'DELETE FROM' || t.value === 'CREATE TABLE') {
+        if (result.length > 0) result += '\n';
+        result += t.value;
+        indent = 0;
+      } else {
+        result += '\n' + t.value;
+      }
+    } else if (t.type === 'keyword' && (t.value === 'AND' || t.value === 'OR')) {
+      result += '\n' + indentStr.repeat(indent + 1) + t.value;
+    } else if (t.type === 'symbol' && t.value === ',') {
+      result += ',\n' + indentStr.repeat(indent + 1);
+    } else if (t.type === 'symbol' && t.value === '(') {
+      result += ' ('; indent++;
+    } else if (t.type === 'symbol' && t.value === ')') {
+      indent = Math.max(0, indent - 1); result += ')';
+    } else {
+      result += ' ' + (t.type === 'keyword' ? t.value : t.value);
+    }
+  }
+
+  showOutput(result.trim(), sql);
+  explain(tokens);
+}
+
+function minify() {
+  const sql = document.getElementById('input').value.trim();
+  if (!sql) return;
+  const result = sql.replace(/\s+/g, ' ').replace(/\s*([,;()])\s*/g, '$1').replace(/\(\s/g,'(').replace(/\s\)/g,')').trim();
+  showOutput(result, sql);
+}
+
+function showOutput(result, original) {
+  const output = document.getElementById('output');
+  output.innerHTML = highlight(result);
+  const stats = document.getElementById('stats');
+  stats.textContent = `Original: ${original.length} chars | Output: ${result.length} chars`;
+  window._lastOutput = result;
+}
+
+function highlight(sql) {
+  return sql.replace(/('[^']*'|"[^"]*")/g, '<span class="str">$1</span>')
+    .replace(/\b(\d+\.?\d*)\b/g, '<span class="num">$1</span>')
+    .replace(new RegExp('\\b(' + KEYWORDS.join('|').replace(/\s+/g,'\\s+') + ')\\b', 'gi'), (m) => '<span class="kw">' + m.toUpperCase() + '</span>')
+    .replace(/\b(COUNT|SUM|AVG|MIN|MAX|COALESCE|CONCAT|LENGTH|UPPER|LOWER|TRIM|NOW|DATE|CAST)\b/gi, '<span class="fn">$1</span>');
+}
+
+function explain(tokens) {
+  const box = document.getElementById('explainOutput');
+  const parts = [];
+  let currentClause = '';
+  let clauseContent = [];
+
+  tokens.forEach(t => {
+    if (t.type === 'keyword' && MAJOR_CLAUSES.includes(t.value)) {
+      if (currentClause && clauseContent.length) {
+        parts.push({clause: currentClause, content: clauseContent.join(' ')});
+      }
+      currentClause = t.value;
+      clauseContent = [];
+    } else {
+      clauseContent.push(t.value);
+    }
+  });
+  if (currentClause) parts.push({clause: currentClause, content: clauseContent.join(' ')});
+
+  const descriptions = {
+    'SELECT': 'Columns to retrieve',
+    'FROM': 'Source table(s)',
+    'WHERE': 'Filter conditions',
+    'INNER JOIN': 'Match rows in both tables',
+    'LEFT JOIN': 'All rows from left + matching from right',
+    'RIGHT JOIN': 'All rows from right + matching from left',
+    'FULL JOIN': 'All rows from both tables',
+    'JOIN': 'Join with another table',
+    'ON': 'Join condition',
+    'ORDER BY': 'Sort results',
+    'GROUP BY': 'Group rows for aggregation',
+    'HAVING': 'Filter groups',
+    'LIMIT': 'Restrict number of rows',
+    'OFFSET': 'Skip rows',
+    'INSERT INTO': 'Insert data into table',
+    'VALUES': 'Data values to insert',
+    'UPDATE': 'Modify existing rows',
+    'SET': 'New values for columns',
+    'DELETE FROM': 'Remove rows from table',
+    'CREATE TABLE': 'Define a new table',
+    'UNION': 'Combine result sets (distinct)',
+    'UNION ALL': 'Combine result sets (all)',
+  };
+
+  box.innerHTML = parts.map(p => `<div class="explain-item"><div class="explain-label">${p.clause}</div><div class="explain-desc">${descriptions[p.clause] || 'Clause'}: ${escapeHtml(p.content)}</div></div>`).join('');
+}
+
+function copyOutput() {
+  if (window._lastOutput) {
+    navigator.clipboard.writeText(window._lastOutput);
+  }
+}
+
+function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Tabs
+const tabs = document.querySelectorAll('.tab');
+tabs.forEach(t => t.onclick = () => {
+  tabs.forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  document.querySelectorAll('[id^="tab-"]').forEach(p => p.style.display = 'none');
+  document.getElementById('tab-' + t.dataset.tab).style.display = 'block';
+});
+
+// Presets
+const presets = [
+  {name:'SELECT with JOIN', sql:"SELECT u.name, o.total\nFROM users u\nINNER JOIN orders o ON u.id = o.user_id\nWHERE o.total > 50\nORDER BY o.total DESC;"},
+  {name:'INSERT', sql:"INSERT INTO users (name, email, status)\nVALUES ('John Doe', 'john@example.com', 'active');"},
+  {name:'UPDATE', sql:"UPDATE products\nSET price = price * 1.10, updated_at = NOW()\nWHERE category = 'electronics'\nAND stock > 0;"},
+  {name:'CREATE TABLE', sql:"CREATE TABLE orders (\n  id SERIAL PRIMARY KEY,\n  user_id INTEGER NOT NULL REFERENCES users(id),\n  total DECIMAL(10,2) DEFAULT 0,\n  status VARCHAR(20) DEFAULT 'pending',\n  created_at TIMESTAMP DEFAULT NOW()\n);"},
+  {name:'Subquery', sql:"SELECT name, email\nFROM users\nWHERE id IN (\n  SELECT user_id FROM orders\n  WHERE total > 100\n  GROUP BY user_id\n  HAVING COUNT(*) > 3\n);"},
+  {name:'Aggregate', sql:"SELECT category, COUNT(*) as count,\n  AVG(price) as avg_price,\n  MAX(price) as max_price\nFROM products\nGROUP BY category\nHAVING COUNT(*) > 5\nORDER BY avg_price DESC;"},
+  {name:'LEFT JOIN', sql:"SELECT u.name, COALESCE(SUM(o.total), 0) as lifetime_spend\nFROM users u\nLEFT JOIN orders o ON u.id = o.user_id\nGROUP BY u.id, u.name\nORDER BY lifetime_spend DESC\nLIMIT 20;"},
+  {name:'CASE expression', sql:"SELECT name, price,\n  CASE\n    WHEN price < 10 THEN 'budget'\n    WHEN price < 50 THEN 'mid-range'\n    ELSE 'premium'\n  END as tier\nFROM products\nORDER BY price;"},
+];
+
+const grid = document.getElementById('presetsGrid');
+presets.forEach(p => {
+  const btn = document.createElement('div');
+  btn.className = 'preset-btn';
+  btn.textContent = p.name;
+  btn.onclick = () => { document.getElementById('input').value = p.sql; format(); };
+  grid.appendChild(btn);
+});
+
+format();
+</script>
+<script src="/related.js"></script>
+</body>
+</html>

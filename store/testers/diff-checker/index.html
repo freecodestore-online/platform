@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Text/Code Diff Checker — FreeCodeStore</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e7;font-family:'Inter',sans-serif;padding:24px;min-height:100vh}
+a{color:#22d3ee;text-decoration:none}a:hover{text-decoration:underline}
+.back{display:inline-block;margin-bottom:20px;font-size:14px}
+h1{font-size:24px;font-weight:600;margin-bottom:20px}
+.panel{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:16px;margin-bottom:16px}
+.toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+button{font-family:'Inter',sans-serif;font-size:13px;background:#22d3ee;color:#09090b;font-weight:500;cursor:pointer;border:none;padding:8px 14px;border-radius:6px}
+button:hover{opacity:0.9}
+button.secondary{background:#27272a;color:#e4e4e7}
+button.active{background:#22d3ee;color:#09090b}
+select{font-family:'Inter',sans-serif;font-size:13px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:6px 10px;outline:none}
+textarea{width:100%;min-height:200px;resize:vertical;font-family:'JetBrains Mono',monospace;font-size:13px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:12px;outline:none;line-height:1.5;tab-size:2}
+textarea:focus{border-color:#22d3ee}
+.editors{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.editor-label{font-size:12px;color:#71717a;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.diff-output{background:#09090b;border:1px solid #27272a;border-radius:6px;overflow:auto;max-height:500px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6}
+.diff-line{padding:2px 12px;white-space:pre-wrap;word-break:break-all;display:flex}
+.diff-line-num{color:#71717a;min-width:40px;text-align:right;padding-right:12px;user-select:none;opacity:0.6}
+.diff-line-content{flex:1}
+.diff-added{background:#052e1620;color:#4ade80}
+.diff-removed{background:#1c0a0a20;color:#ef4444}
+.diff-changed{background:#422006;color:#fbbf24}
+.diff-context{color:#71717a}
+.diff-char-added{background:#4ade8033;border-radius:2px}
+.diff-char-removed{background:#ef444433;border-radius:2px}
+.stats{font-size:13px;color:#71717a;display:flex;gap:16px;padding:12px 0}
+.stats .added{color:#4ade80}.stats .removed{color:#ef4444}.stats .changed{color:#fbbf24}
+.side-by-side{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.side-panel{overflow:auto;max-height:500px;border:1px solid #27272a}
+.side-panel:first-child{border-right:none;border-radius:6px 0 0 6px}
+.side-panel:last-child{border-radius:0 6px 6px 0}
+.side-header{font-size:11px;color:#71717a;text-transform:uppercase;padding:8px 12px;background:#18181b;border-bottom:1px solid #27272a;position:sticky;top:0}
+.toggle-group{display:flex;gap:0}
+.toggle-group button{border-radius:0;border:1px solid #27272a}
+.toggle-group button:first-child{border-radius:6px 0 0 6px}
+.toggle-group button:last-child{border-radius:0 6px 6px 0}
+label.opt{display:flex;align-items:center;gap:4px;font-size:13px;color:#71717a;cursor:pointer}
+label.opt input{accent-color:#22d3ee}
+</style>
+</head>
+<body>
+<a class="back" href="/">&#8592; All Tools</a>
+<h1>Text/Code Diff Checker</h1>
+
+<div class="panel">
+<div class="editors">
+<div>
+<div class="editor-label">Original</div>
+<textarea id="textA" placeholder="Paste original text...">function greet(name) {
+  console.log("Hello, " + name);
+  return true;
+}
+
+const x = 42;
+const y = "world";</textarea>
+</div>
+<div>
+<div class="editor-label">Modified</div>
+<textarea id="textB" placeholder="Paste modified text...">function greet(name, greeting) {
+  console.log(greeting + ", " + name + "!");
+  return true;
+}
+
+const x = 100;
+const z = "world";</textarea>
+</div>
+</div>
+</div>
+
+<div class="toolbar">
+<button onclick="runDiff()">Compare</button>
+<div class="toggle-group">
+<button class="secondary" id="modeChar" onclick="setMode('char')">Char</button>
+<button class="secondary" id="modeWord" onclick="setMode('word')">Word</button>
+<button class="secondary active" id="modeLine" onclick="setMode('line')">Line</button>
+</div>
+<div class="toggle-group">
+<button class="secondary active" id="viewInline" onclick="setView('inline')">Inline</button>
+<button class="secondary" id="viewSide" onclick="setView('side')">Side-by-Side</button>
+</div>
+<label class="opt"><input type="checkbox" id="ignoreWS">Ignore whitespace</label>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div id="diffContainer" class="panel" style="padding:0;overflow:hidden"></div>
+
+<script>
+let diffMode = 'line';
+let viewMode = 'inline';
+
+function setMode(m) {
+  diffMode = m;
+  document.querySelectorAll('#modeChar,#modeWord,#modeLine').forEach(b => b.classList.remove('active'));
+  document.getElementById('mode' + m.charAt(0).toUpperCase() + m.slice(1)).classList.add('active');
+  runDiff();
+}
+
+function setView(v) {
+  viewMode = v;
+  document.querySelectorAll('#viewInline,#viewSide').forEach(b => b.classList.remove('active'));
+  document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1)).classList.add('active');
+  runDiff();
+}
+
+function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Simple LCS-based diff
+function lcs(a, b) {
+  const m = a.length, n = b.length;
+  // For very large inputs, use a simpler approach
+  if (m * n > 10000000) return simpleDiff(a, b);
+  const dp = Array.from({length: m+1}, () => new Uint16Array(n+1));
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j], dp[i][j-1]);
+
+  const result = [];
+  let i = m, j = n;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && a[i-1] === b[j-1]) {
+      result.unshift({type:'same', a:a[i-1], b:b[j-1]});
+      i--; j--;
+    } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) {
+      result.unshift({type:'added', b:b[j-1]});
+      j--;
+    } else {
+      result.unshift({type:'removed', a:a[i-1]});
+      i--;
+    }
+  }
+  return result;
+}
+
+function simpleDiff(a, b) {
+  const result = [];
+  let i = 0, j = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) { result.push({type:'same', a:a[i], b:b[j]}); i++; j++; }
+    else { result.push({type:'removed', a:a[i]}); result.push({type:'added', b:b[j]}); i++; j++; }
+  }
+  while (i < a.length) { result.push({type:'removed', a:a[i]}); i++; }
+  while (j < b.length) { result.push({type:'added', b:b[j]}); j++; }
+  return result;
+}
+
+function tokenize(text) {
+  if (diffMode === 'line') return text.split('\n');
+  if (diffMode === 'word') return text.split(/(\s+)/);
+  return text.split('');
+}
+
+function normalize(token) {
+  return document.getElementById('ignoreWS').checked ? token.replace(/\s+/g, ' ').trim() : token;
+}
+
+function runDiff() {
+  const textA = document.getElementById('textA').value;
+  const textB = document.getElementById('textB').value;
+
+  const tokensA = tokenize(textA);
+  const tokensB = tokenize(textB);
+
+  const normA = tokensA.map(normalize);
+  const normB = tokensB.map(normalize);
+
+  const diff = lcs(normA, normB);
+
+  // Map back to original tokens
+  let ai = 0, bi = 0;
+  const enriched = diff.map(d => {
+    if (d.type === 'same') return {type:'same', value: tokensA[ai++], bval: tokensB[bi++]};
+    if (d.type === 'removed') return {type:'removed', value: tokensA[ai++]};
+    return {type:'added', value: tokensB[bi++]};
+  });
+
+  let added = 0, removed = 0;
+  enriched.forEach(d => { if (d.type === 'added') added++; if (d.type === 'removed') removed++; });
+
+  document.getElementById('stats').innerHTML =
+    `<span class="added">+${added} added</span><span class="removed">-${removed} removed</span><span>${enriched.filter(d=>d.type==='same').length} unchanged</span>`;
+
+  const container = document.getElementById('diffContainer');
+
+  if (diffMode === 'line') {
+    if (viewMode === 'inline') renderInlineLine(enriched, container);
+    else renderSideLine(enriched, container);
+  } else {
+    renderInlineToken(enriched, container);
+  }
+}
+
+function renderInlineLine(diff, container) {
+  let html = '<div class="diff-output">';
+  let lineA = 0, lineB = 0;
+  diff.forEach(d => {
+    if (d.type === 'same') {
+      lineA++; lineB++;
+      html += `<div class="diff-line diff-context"><span class="diff-line-num">${lineA}</span><span class="diff-line-content"> ${escapeHtml(d.value)}</span></div>`;
+    } else if (d.type === 'removed') {
+      lineA++;
+      html += `<div class="diff-line diff-removed"><span class="diff-line-num">${lineA}</span><span class="diff-line-content">-${escapeHtml(d.value)}</span></div>`;
+    } else {
+      lineB++;
+      html += `<div class="diff-line diff-added"><span class="diff-line-num">${lineB}</span><span class="diff-line-content">+${escapeHtml(d.value)}</span></div>`;
+    }
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function renderSideLine(diff, container) {
+  let leftHtml = '<div class="side-header">Original</div>';
+  let rightHtml = '<div class="side-header">Modified</div>';
+  let lineA = 0, lineB = 0;
+
+  diff.forEach(d => {
+    if (d.type === 'same') {
+      lineA++; lineB++;
+      leftHtml += `<div class="diff-line diff-context"><span class="diff-line-num">${lineA}</span><span class="diff-line-content">${escapeHtml(d.value)}</span></div>`;
+      rightHtml += `<div class="diff-line diff-context"><span class="diff-line-num">${lineB}</span><span class="diff-line-content">${escapeHtml(d.value)}</span></div>`;
+    } else if (d.type === 'removed') {
+      lineA++;
+      leftHtml += `<div class="diff-line diff-removed"><span class="diff-line-num">${lineA}</span><span class="diff-line-content">${escapeHtml(d.value)}</span></div>`;
+      rightHtml += `<div class="diff-line" style="opacity:0.3"><span class="diff-line-num"></span><span class="diff-line-content"></span></div>`;
+    } else {
+      lineB++;
+      leftHtml += `<div class="diff-line" style="opacity:0.3"><span class="diff-line-num"></span><span class="diff-line-content"></span></div>`;
+      rightHtml += `<div class="diff-line diff-added"><span class="diff-line-num">${lineB}</span><span class="diff-line-content">${escapeHtml(d.value)}</span></div>`;
+    }
+  });
+
+  container.innerHTML = `<div class="side-by-side"><div class="side-panel">${leftHtml}</div><div class="side-panel">${rightHtml}</div></div>`;
+}
+
+function renderInlineToken(diff, container) {
+  let html = '<div class="diff-output" style="padding:12px;white-space:pre-wrap;word-break:break-all">';
+  diff.forEach(d => {
+    if (d.type === 'same') html += escapeHtml(d.value);
+    else if (d.type === 'removed') html += `<span class="diff-char-removed">${escapeHtml(d.value)}</span>`;
+    else html += `<span class="diff-char-added">${escapeHtml(d.value)}</span>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+document.getElementById('ignoreWS').addEventListener('change', runDiff);
+runDiff();
+</script>
+<script src="/related.js"></script>
+</body>
+</html>

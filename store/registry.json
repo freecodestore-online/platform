@@ -1,0 +1,94 @@
+{
+  "robots": [
+    {
+      "id": "regex-tester",
+      "name": "Regex Tester",
+      "description": "Live match highlighting, flags, groups, replace mode, explain mode, 24 common patterns, cheatsheet.",
+      "icon": ".*",
+      "iconBg": "#22d3ee",
+      "category": "testers",
+      "section": "testers"
+    },
+    {
+      "id": "json-formatter",
+      "name": "JSON Formatter",
+      "description": "Beautify, minify, validate, tree view, JSONPath, diff two JSONs, convert to YAML/CSV/TypeScript types.",
+      "icon": "{}",
+      "iconBg": "#a855f7",
+      "category": "formatters",
+      "section": "formatters"
+    },
+    {
+      "id": "base64",
+      "name": "Base64 & Encoders",
+      "description": "Base64, URL, HTML entities, hex, binary, ROT13. File mode with image preview. Bidirectional.",
+      "icon": "B64",
+      "iconBg": "#f97316",
+      "category": "encoders",
+      "section": "encoders"
+    },
+    {
+      "id": "hash-generator",
+      "name": "Hash Generator",
+      "description": "MD5, SHA-1/256/384/512 simultaneously. File hashing, HMAC, password strength analyzer.",
+      "icon": "#",
+      "iconBg": "#ef4444",
+      "category": "generators",
+      "section": "generators"
+    },
+    {
+      "id": "uuid-generator",
+      "name": "UUID Generator",
+      "description": "UUID v4/v7, ULID, nanoid, CUID, ObjectId. Bulk 1-100, parse, custom alphabet.",
+      "icon": "id",
+      "iconBg": "#10b981",
+      "category": "generators",
+      "section": "generators"
+    },
+    {
+      "id": "diff-checker",
+      "name": "Diff Checker",
+      "description": "Side-by-side text diff. Character/word/line modes, inline view, ignore whitespace.",
+      "icon": "+-",
+      "iconBg": "#eab308",
+      "category": "testers",
+      "section": "testers"
+    },
+    {
+      "id": "cron-parser",
+      "name": "Cron Parser",
+      "description": "Human-readable cron descriptions, next 10 runs, visual builder, 15 presets.",
+      "icon": "**",
+      "iconBg": "#6366f1",
+      "category": "testers",
+      "section": "testers"
+    },
+    {
+      "id": "jwt-decoder",
+      "name": "JWT Decoder",
+      "description": "Decode header + payload, verify HMAC signature, check expiration, generate tokens.",
+      "icon": "JWT",
+      "iconBg": "#ec4899",
+      "category": "encoders",
+      "section": "encoders"
+    },
+    {
+      "id": "color-converter",
+      "name": "Color Converter",
+      "description": "Hex/RGB/HSL/HSB/CMYK/named. All formats at once, contrast check, shades, harmonies.",
+      "icon": "#c",
+      "iconBg": "#8b5cf6",
+      "category": "converters",
+      "section": "converters"
+    },
+    {
+      "id": "timestamp",
+      "name": "Timestamp Converter",
+      "description": "Unix timestamp, 16 timezones, date math, countdown, relative time, epoch milestones.",
+      "icon": "ts",
+      "iconBg": "#06b6d4",
+      "category": "converters",
+      "section": "converters"
+    }
+  ]
+}

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSS/JS/HTML Minifier &amp; Beautifier — FreeCodeStore</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e7;font-family:'Inter',sans-serif;padding:24px;min-height:100vh}
+a{color:#22d3ee;text-decoration:none}
+a:hover{text-decoration:underline}
+.back{display:inline-block;margin-bottom:20px;font-size:14px}
+h1{font-size:24px;font-weight:600;margin-bottom:20px}
+.panel{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:16px;margin-bottom:16px}
+textarea{font-family:'JetBrains Mono',monospace;font-size:13px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:12px;outline:none;width:100%;resize:vertical;min-height:200px;line-height:1.6}
+textarea:focus{border-color:#22d3ee}
+button{font-family:'Inter',sans-serif;font-size:13px;background:#22d3ee;color:#09090b;font-weight:500;cursor:pointer;border:none;padding:8px 16px;border-radius:6px}
+button:hover{opacity:0.9}
+button.secondary{background:#27272a;color:#e4e4e7}
+.section-title{font-size:13px;font-weight:500;color:#71717a;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
+.tabs{display:flex;gap:4px;margin-bottom:16px}
+.tab{padding:8px 18px;border-radius:6px;cursor:pointer;font-size:14px;background:#09090b;border:1px solid #27272a;color:#71717a;font-family:'Inter',sans-serif;font-weight:500}
+.tab.active{background:#22d3ee;color:#09090b;border-color:#22d3ee}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.stats{font-size:13px;color:#71717a;margin-top:8px;display:flex;gap:16px}
+.stats .saved{color:#4ade80}
+.stats .bigger{color:#f87171}
+.indent-select{font-family:'Inter',sans-serif;font-size:13px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:6px 10px;cursor:pointer;outline:none}
+.output-area{background:#09090b;border:1px solid #27272a;border-radius:6px;padding:12px;min-height:200px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;overflow-x:auto;word-break:break-all}
+</style>
+</head>
+<body>
+<a class="back" href="/">&#8592; All Tools</a>
+<h1>CSS/JS/HTML Minifier &amp; Beautifier</h1>
+
+<div class="tabs">
+<div class="tab active" data-lang="css">CSS</div>
+<div class="tab" data-lang="js">JavaScript</div>
+<div class="tab" data-lang="html">HTML</div>
+</div>
+
+<div class="panel">
+<div class="section-title">Input</div>
+<textarea id="input" placeholder="Paste your code here...">/* Reset styles */
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+  background-color: #0a0a0a;
+  color: #e4e4e7;
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* Button styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+.btn-primary {
+  background-color: #22d3ee;
+  color: #09090b;
+}</textarea>
+</div>
+
+<div class="row">
+<button onclick="doMinify()">Minify</button>
+<button class="secondary" onclick="doBeautify()">Beautify</button>
+<button class="secondary" onclick="copyOutput()">Copy Output</button>
+<select id="indentSize" class="indent-select">
+<option value="2">2 spaces</option>
+<option value="4">4 spaces</option>
+<option value="tab">Tab</option>
+</select>
+</div>
+
+<div class="panel">
+<div class="section-title">Output</div>
+<div class="output-area" id="output"></div>
+<div class="stats" id="stats"></div>
+</div>
+
+<script>
+let currentLang = 'css';
+let lastOutput = '';
+
+const samples = {
+  css: `/* Reset styles */
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+  background-color: #0a0a0a;
+  color: #e4e4e7;
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* Button styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+.btn-primary {
+  background-color: #22d3ee;
+  color: #09090b;
+}`,
+  js: `// Utility functions
+function debounce(fn, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      fn.apply(this, args);
+    }, delay);
+  };
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 B';
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i];
+}
+
+// Event listener
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.getElementById('form');
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    console.log('Form submitted');
+  });
+});`,
+  html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Example Page</title>
+  <!-- Main stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav class="container">
+      <a href="/" class="logo">Site</a>
+      <ul>
+        <li><a href="/about">About</a></li>
+        <li><a href="/contact">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1>Welcome</h1>
+    <p>This is an example page with some content.</p>
+
+    <section>
+      <h2>Features</h2>
+      <ul>
+        <li>Fast loading</li>
+        <li>Responsive design</li>
+        <li>Clean code</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Example</p>
+  </footer>
+
+  <script src="app.js"><\/script>
+</body>
+</html>`
+};
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  currentLang = t.dataset.lang;
+  document.getElementById('input').value = samples[currentLang];
+  document.getElementById('output').textContent = '';
+  document.getElementById('stats').innerHTML = '';
+});
+
+function getIndent() {
+  const v = document.getElementById('indentSize').value;
+  return v === 'tab' ? '\t' : ' '.repeat(parseInt(v));
+}
+
+// CSS minifier
+function minifyCss(css) {
+  return css
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*([{}:;,>~+])\s*/g, '$1')
+    .replace(/;}/g, '}')
+    .replace(/#([0-9a-fA-F])\1([0-9a-fA-F])\2([0-9a-fA-F])\3\b/g, '#$1$2$3')
+    .replace(/\s*!important/g, '!important')
+    .replace(/(:| )0(px|em|rem|%)/g, '$10')
+    .trim();
+}
+
+function beautifyCss(css) {
+  const ind = getIndent();
+  let result = css.replace(/\/\*[\s\S]*?\*\//g, m => '\n' + m + '\n');
+  result = result.replace(/\s*{\s*/g, ' {\n').replace(/\s*}\s*/g, '\n}\n\n').replace(/;\s*/g, ';\n');
+  const lines = result.split('\n');
+  let level = 0;
+  return lines.map(line => {
+    line = line.trim();
+    if (!line) return '';
+    if (line === '}') { level = Math.max(0, level - 1); return ind.repeat(level) + line; }
+    const out = ind.repeat(level) + line;
+    if (line.endsWith('{')) level++;
+    return out;
+  }).filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\n').trim();
+}
+
+// JS minifier (basic, no AST)
+function minifyJs(js) {
+  return js
+    .replace(/\/\/.*$/gm, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\n\s*/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*([{}()=+\-*/<>!&|:;,?])\s*/g, '$1')
+    .replace(/;\s*}/g, '}')
+    .trim();
+}
+
+function beautifyJs(js) {
+  const ind = getIndent();
+  let result = '';
+  let level = 0;
+  let inString = false;
+  let stringChar = '';
+
+  const tokens = js.replace(/\s+/g, ' ').trim();
+  for (let i = 0; i < tokens.length; i++) {
+    const c = tokens[i];
+    if (inString) {
+      result += c;
+      if (c === stringChar && tokens[i - 1] !== '\\') inString = false;
+      continue;
+    }
+    if (c === '"' || c === "'" || c === '`') { inString = true; stringChar = c; result += c; continue; }
+    if (c === '{') { result += ' {\n' + ind.repeat(++level); continue; }
+    if (c === '}') { result = result.trimEnd(); result += '\n' + ind.repeat(--level) + '}\n' + ind.repeat(level); continue; }
+    if (c === ';') { result += ';\n' + ind.repeat(level); continue; }
+    result += c;
+  }
+  return result.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+}
+
+// HTML minifier
+function minifyHtml(html) {
+  return html
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/>\s+</g, '><')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*\/>/g, '/>')
+    .trim();
+}
+
+function beautifyHtml(html) {
+  const ind = getIndent();
+  const selfClosing = ['br','hr','img','input','meta','link','area','base','col','embed','source','track','wbr'];
+  let result = '';
+  let level = 0;
+
+  html = html.replace(/>\s+</g, '><').replace(/\s+/g, ' ').trim();
+  const parts = html.split(/(<[^>]+>)/g).filter(Boolean);
+
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+
+    if (trimmed.startsWith('</')) {
+      level = Math.max(0, level - 1);
+      result += ind.repeat(level) + trimmed + '\n';
+    } else if (trimmed.startsWith('<')) {
+      result += ind.repeat(level) + trimmed + '\n';
+      const tag = trimmed.match(/<([a-zA-Z][a-zA-Z0-9]*)/);
+      if (tag && !selfClosing.includes(tag[1].toLowerCase()) && !trimmed.endsWith('/>') && !trimmed.startsWith('<!') && !trimmed.startsWith('<?')) {
+        level++;
+      }
+    } else {
+      result += ind.repeat(level) + trimmed + '\n';
+    }
+  }
+  return result.trim();
+}
+
+function doMinify() {
+  const input = document.getElementById('input').value;
+  let output = '';
+  if (currentLang === 'css') output = minifyCss(input);
+  else if (currentLang === 'js') output = minifyJs(input);
+  else output = minifyHtml(input);
+  showOutput(output, input);
+}
+
+function doBeautify() {
+  const input = document.getElementById('input').value;
+  let output = '';
+  if (currentLang === 'css') output = beautifyCss(input);
+  else if (currentLang === 'js') output = beautifyJs(input);
+  else output = beautifyHtml(input);
+  showOutput(output, input);
+}
+
+function showOutput(output, input) {
+  lastOutput = output;
+  document.getElementById('output').textContent = output;
+  const origSize = new Blob([input]).size;
+  const outSize = new Blob([output]).size;
+  const diff = origSize - outSize;
+  const pct = origSize ? ((diff / origSize) * 100).toFixed(1) : 0;
+  const cls = diff > 0 ? 'saved' : diff < 0 ? 'bigger' : '';
+  document.getElementById('stats').innerHTML =
+    `<span>Original: ${origSize} B</span>` +
+    `<span>Output: ${outSize} B</span>` +
+    `<span class="${cls}">${diff > 0 ? 'Saved' : diff < 0 ? 'Added' : 'Same'}: ${Math.abs(diff)} B (${Math.abs(pct)}%)</span>`;
+}
+
+function copyOutput() {
+  if (lastOutput) navigator.clipboard.writeText(lastOutput);
+}
+</script>
+<script src="/related.js"></script>
+</body>
+</html>

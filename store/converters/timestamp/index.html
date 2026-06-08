@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unix Timestamp Converter — FreeCodeStore</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e7;font-family:'Inter',sans-serif;padding:24px;min-height:100vh}
+a{color:#22d3ee;text-decoration:none}a:hover{text-decoration:underline}
+.back{display:inline-block;margin-bottom:20px;font-size:14px}
+h1{font-size:24px;font-weight:600;margin-bottom:20px}
+.panel{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:16px;margin-bottom:16px}
+input[type=text],input[type=number],input[type=datetime-local]{font-family:'JetBrains Mono',monospace;font-size:13px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:10px 12px;outline:none;width:100%}
+input:focus{border-color:#22d3ee}
+select{font-family:'Inter',sans-serif;font-size:13px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:8px 10px;outline:none}
+button{font-family:'Inter',sans-serif;font-size:13px;background:#22d3ee;color:#09090b;font-weight:500;cursor:pointer;border:none;padding:8px 14px;border-radius:6px}
+button:hover{opacity:0.9}
+button.secondary{background:#27272a;color:#e4e4e7}
+button.copy-btn{background:none;color:#71717a;padding:4px 8px;font-size:12px;border:1px solid #27272a}
+button.copy-btn:hover{color:#22d3ee;border-color:#22d3ee}
+.label{font-size:12px;color:#71717a;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;margin-top:12px}
+.section-title{font-size:12px;color:#71717a;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;margin-top:16px}
+.live-clock{font-family:'JetBrains Mono',monospace;text-align:center;padding:16px}
+.live-ts{font-size:32px;color:#22d3ee;font-weight:500}
+.live-iso{font-size:16px;color:#e4e4e7;margin-top:8px}
+.live-relative{font-size:14px;color:#71717a;margin-top:4px}
+.toolbar{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap;align-items:center}
+.result-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#09090b;border:1px solid #27272a;border-radius:6px;margin-bottom:6px}
+.result-label{min-width:100px;font-size:12px;color:#71717a}
+.result-value{font-family:'JetBrains Mono',monospace;font-size:13px;flex:1;word-break:break-all}
+.tz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px}
+.tz-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#09090b;border:1px solid #27272a;border-radius:6px}
+.tz-name{min-width:90px;font-size:12px;color:#71717a}
+.tz-value{font-family:'JetBrains Mono',monospace;font-size:12px}
+.math-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.math-row input{width:80px}
+.milestones{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:2}
+.milestone{display:flex;gap:12px;padding:4px 0;border-bottom:1px solid #27272a}
+.milestone:last-child{border-bottom:none}
+.milestone-ts{color:#22d3ee;min-width:120px}
+.milestone-name{color:#e4e4e7}
+.milestone-date{color:#71717a;font-size:12px}
+.tabs{display:flex;gap:4px;margin-bottom:16px}
+.tab{padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;background:#09090b;border:1px solid #27272a;color:#71717a}
+.tab.active{background:#22d3ee;color:#09090b;border-color:#22d3ee}
+.countdown{font-family:'JetBrains Mono',monospace;text-align:center;padding:20px;font-size:24px;color:#22d3ee}
+.countdown-parts{display:flex;gap:16px;justify-content:center;margin-top:12px}
+.countdown-part{text-align:center}
+.countdown-num{font-size:36px;font-weight:600;color:#22d3ee}
+.countdown-label{font-size:11px;color:#71717a;text-transform:uppercase}
+</style>
+</head>
+<body>
+<a class="back" href="/">&#8592; All Tools</a>
+<h1>Unix Timestamp Converter</h1>
+
+<div class="panel">
+<div class="live-clock">
+<div class="live-ts" id="liveTs"></div>
+<div class="live-iso" id="liveIso"></div>
+<div class="live-relative" id="liveRelative"></div>
+</div>
+</div>
+
+<div class="tabs">
+<div class="tab active" data-tab="convert">Convert</div>
+<div class="tab" data-tab="timezones">Timezones</div>
+<div class="tab" data-tab="math">Date Math</div>
+<div class="tab" data-tab="milestones">Milestones</div>
+<div class="tab" data-tab="countdown">Countdown</div>
+</div>
+
+<div id="tab-convert" class="panel">
+<div class="label">Unix Timestamp to Date</div>
+<div class="toolbar">
+<input type="text" id="tsInput" placeholder="e.g. 1716239022" style="flex:1" value="">
+<button onclick="tsToDate()">Convert</button>
+<button class="secondary" onclick="document.getElementById('tsInput').value=Math.floor(Date.now()/1000);tsToDate()">Now</button>
+</div>
+<div id="tsResults"></div>
+
+<div class="label" style="margin-top:20px">Date to Unix Timestamp</div>
+<div class="toolbar">
+<input type="datetime-local" id="dateInput" style="flex:1">
+<button onclick="dateToTs()">Convert</button>
+</div>
+<div id="dateResults"></div>
+</div>
+
+<div id="tab-timezones" class="panel" style="display:none">
+<div class="label">Timestamp</div>
+<div class="toolbar">
+<input type="text" id="tzInput" placeholder="Unix timestamp..." style="flex:1">
+<button onclick="showTimezones()">Show</button>
+<button class="secondary" onclick="document.getElementById('tzInput').value=Math.floor(Date.now()/1000);showTimezones()">Now</button>
+</div>
+<div class="tz-grid" id="tzGrid"></div>
+</div>
+
+<div id="tab-math" class="panel" style="display:none">
+<div class="label">Start Date/Time</div>
+<input type="datetime-local" id="mathStart">
+<div class="label">Operation</div>
+<div class="math-row">
+<select id="mathOp"><option value="add">Add</option><option value="sub">Subtract</option></select>
+<input type="number" id="mathVal" value="7" min="0">
+<select id="mathUnit">
+<option value="minutes">Minutes</option>
+<option value="hours">Hours</option>
+<option value="days" selected>Days</option>
+<option value="weeks">Weeks</option>
+<option value="months">Months</option>
+<option value="years">Years</option>
+</select>
+<button onclick="doMath()">Calculate</button>
+</div>
+<div id="mathResult" style="margin-top:12px"></div>
+</div>
+
+<div id="tab-milestones" class="panel" style="display:none">
+<div class="section-title">Notable Unix Timestamps</div>
+<div class="milestones" id="milestonesList"></div>
+</div>
+
+<div id="tab-countdown" class="panel" style="display:none">
+<div class="label">Target Date</div>
+<input type="datetime-local" id="countdownTarget">
+<div class="toolbar">
+<button onclick="startCountdown()">Start Countdown</button>
+</div>
+<div class="countdown" id="countdownDisplay"></div>
+</div>
+
+<script>
+const tabs = document.querySelectorAll('.tab');
+tabs.forEach(t => t.onclick = () => {
+  tabs.forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  ['convert','timezones','math','milestones','countdown'].forEach(id => {
+    document.getElementById('tab-' + id).style.display = id === t.dataset.tab ? '' : 'none';
+  });
+});
+
+function relative(date) {
+  const now = new Date();
+  const diff = date - now;
+  const abs = Math.abs(diff);
+  const past = diff < 0;
+  const s = Math.floor(abs / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  const d = Math.floor(h / 24);
+  const y = Math.floor(d / 365);
+  let str;
+  if (y > 0) str = `${y} year${y>1?'s':''}`;
+  else if (d > 0) str = `${d} day${d>1?'s':''}`;
+  else if (h > 0) str = `${h} hour${h>1?'s':''} ${m%60}m`;
+  else if (m > 0) str = `${m} minute${m>1?'s':''}`;
+  else str = `${s} second${s>1?'s':''}`;
+  return past ? `${str} ago` : `in ${str}`;
+}
+
+// Live clock
+function updateClock() {
+  const now = new Date();
+  const ts = Math.floor(now.getTime() / 1000);
+  document.getElementById('liveTs').textContent = ts;
+  document.getElementById('liveIso').textContent = now.toISOString();
+  const dayStart = new Date(now); dayStart.setHours(0,0,0,0);
+  const elapsed = now - dayStart;
+  const pct = ((elapsed / 86400000) * 100).toFixed(1);
+  document.getElementById('liveRelative').textContent = `${pct}% of day elapsed | ${now.toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+function tsToDate() {
+  let ts = document.getElementById('tsInput').value.trim();
+  if (!ts) return;
+  ts = parseInt(ts);
+  // Auto-detect ms vs s
+  if (ts > 9999999999) ts = Math.floor(ts / 1000);
+  const date = new Date(ts * 1000);
+
+  const formats = [
+    {label: 'ISO 8601', value: date.toISOString()},
+    {label: 'RFC 2822', value: date.toUTCString()},
+    {label: 'Local', value: date.toLocaleString()},
+    {label: 'Relative', value: relative(date)},
+    {label: 'UTC', value: date.toISOString().replace('T',' ').replace('Z',' UTC')},
+    {label: 'Date', value: date.toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'})},
+    {label: 'Time', value: date.toLocaleTimeString()},
+    {label: 'Timestamp (s)', value: String(ts)},
+    {label: 'Timestamp (ms)', value: String(ts * 1000)},
+  ];
+
+  document.getElementById('tsResults').innerHTML = formats.map(f =>
+    `<div class="result-row"><span class="result-label">${f.label}</span><span class="result-value">${f.value}</span><button class="copy-btn" onclick="navigator.clipboard.writeText('${f.value.replace(/'/g,'')}')">Copy</button></div>`
+  ).join('');
+}
+
+function dateToTs() {
+  const val = document.getElementById('dateInput').value;
+  if (!val) return;
+  const date = new Date(val);
+  const ts = Math.floor(date.getTime() / 1000);
+  document.getElementById('dateResults').innerHTML = [
+    {label:'Unix (s)', value: String(ts)},
+    {label:'Unix (ms)', value: String(ts * 1000)},
+    {label:'ISO 8601', value: date.toISOString()},
+    {label:'Relative', value: relative(date)},
+  ].map(f =>
+    `<div class="result-row"><span class="result-label">${f.label}</span><span class="result-value">${f.value}</span><button class="copy-btn" onclick="navigator.clipboard.writeText('${f.value.replace(/'/g,'')}')">Copy</button></div>`
+  ).join('');
+}
+
+function showTimezones() {
+  let ts = parseInt(document.getElementById('tzInput').value.trim());
+  if (!ts) return;
+  if (ts > 9999999999) ts = Math.floor(ts / 1000);
+  const date = new Date(ts * 1000);
+  const zones = [
+    {name:'UTC',tz:'UTC'},{name:'US Eastern',tz:'America/New_York'},{name:'US Central',tz:'America/Chicago'},
+    {name:'US Mountain',tz:'America/Denver'},{name:'US Pacific',tz:'America/Los_Angeles'},{name:'London',tz:'Europe/London'},
+    {name:'Paris',tz:'Europe/Paris'},{name:'Berlin',tz:'Europe/Berlin'},{name:'Moscow',tz:'Europe/Moscow'},
+    {name:'Dubai',tz:'Asia/Dubai'},{name:'Mumbai',tz:'Asia/Kolkata'},{name:'Shanghai',tz:'Asia/Shanghai'},
+    {name:'Tokyo',tz:'Asia/Tokyo'},{name:'Sydney',tz:'Australia/Sydney'},{name:'Auckland',tz:'Pacific/Auckland'},
+    {name:'Hawaii',tz:'Pacific/Honolulu'},
+  ];
+  document.getElementById('tzGrid').innerHTML = zones.map(z => {
+    let val;
+    try { val = date.toLocaleString('en-US', {timeZone: z.tz, hour12: true, weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}); }
+    catch(e) { val = 'N/A'; }
+    return `<div class="tz-row"><span class="tz-name">${z.name}</span><span class="tz-value">${val}</span></div>`;
+  }).join('');
+}
+
+function doMath() {
+  const start = new Date(document.getElementById('mathStart').value);
+  if (isNaN(start)) return;
+  const op = document.getElementById('mathOp').value;
+  const val = parseInt(document.getElementById('mathVal').value) || 0;
+  const unit = document.getElementById('mathUnit').value;
+  const sign = op === 'sub' ? -1 : 1;
+  const result = new Date(start);
+
+  switch(unit) {
+    case 'minutes': result.setMinutes(result.getMinutes() + val * sign); break;
+    case 'hours': result.setHours(result.getHours() + val * sign); break;
+    case 'days': result.setDate(result.getDate() + val * sign); break;
+    case 'weeks': result.setDate(result.getDate() + val * 7 * sign); break;
+    case 'months': result.setMonth(result.getMonth() + val * sign); break;
+    case 'years': result.setFullYear(result.getFullYear() + val * sign); break;
+  }
+
+  document.getElementById('mathResult').innerHTML = [
+    {label:'Result', value: result.toLocaleString()},
+    {label:'ISO 8601', value: result.toISOString()},
+    {label:'Unix (s)', value: String(Math.floor(result.getTime()/1000))},
+    {label:'Difference', value: `${Math.abs(Math.round((result - start)/86400000))} days`},
+  ].map(f =>
+    `<div class="result-row"><span class="result-label">${f.label}</span><span class="result-value">${f.value}</span></div>`
+  ).join('');
+}
+
+// Milestones
+const milestones = [
+  {ts:0, name:'Unix Epoch'},
+  {ts:1000000000, name:'1 Billion'},
+  {ts:1234567890, name:'1234567890'},
+  {ts:1500000000, name:'1.5 Billion'},
+  {ts:1600000000, name:'1.6 Billion'},
+  {ts:1700000000, name:'1.7 Billion'},
+  {ts:1750000000, name:'1.75 Billion'},
+  {ts:1800000000, name:'1.8 Billion'},
+  {ts:1900000000, name:'1.9 Billion'},
+  {ts:2000000000, name:'2 Billion'},
+  {ts:2100000000, name:'2.1 Billion'},
+  {ts:2147483647, name:'Y2K38 (32-bit overflow)'},
+  {ts:3000000000, name:'3 Billion'},
+  {ts:4102444800, name:'Year 2100'},
+];
+
+document.getElementById('milestonesList').innerHTML = milestones.map(m => {
+  const date = new Date(m.ts * 1000);
+  const now = Math.floor(Date.now()/1000);
+  const isPast = m.ts < now;
+  return `<div class="milestone"><span class="milestone-ts">${m.ts.toLocaleString()}</span><span class="milestone-name">${m.name}</span><span class="milestone-date">${date.toISOString().slice(0,10)} ${isPast ? '(past)' : relative(date)}</span></div>`;
+}).join('');
+
+// Countdown
+let countdownInterval;
+function startCountdown() {
+  const target = new Date(document.getElementById('countdownTarget').value);
+  if (isNaN(target)) return;
+  if (countdownInterval) clearInterval(countdownInterval);
+  function update() {
+    const now = new Date();
+    const diff = target - now;
+    if (diff <= 0) {
+      document.getElementById('countdownDisplay').innerHTML = '<div style="color:#4ade80">Target reached!</div>';
+      clearInterval(countdownInterval);
+      return;
+    }
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    document.getElementById('countdownDisplay').innerHTML = `
+      <div class="countdown-parts">
+        <div class="countdown-part"><div class="countdown-num">${d}</div><div class="countdown-label">Days</div></div>
+        <div class="countdown-part"><div class="countdown-num">${String(h).padStart(2,'0')}</div><div class="countdown-label">Hours</div></div>
+        <div class="countdown-part"><div class="countdown-num">${String(m).padStart(2,'0')}</div><div class="countdown-label">Minutes</div></div>
+        <div class="countdown-part"><div class="countdown-num">${String(s).padStart(2,'0')}</div><div class="countdown-label">Seconds</div></div>
+      </div>`;
+  }
+  update();
+  countdownInterval = setInterval(update, 1000);
+}
+
+// Init
+const now = new Date();
+document.getElementById('dateInput').value = now.toISOString().slice(0,16);
+document.getElementById('mathStart').value = now.toISOString().slice(0,16);
+const tomorrow = new Date(now.getTime() + 86400000);
+document.getElementById('countdownTarget').value = tomorrow.toISOString().slice(0,16);
+document.getElementById('tsInput').value = Math.floor(now.getTime() / 1000);
+tsToDate();
+</script>
+<script src="/related.js"></script>
+</body>
+</html>

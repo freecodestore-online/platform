@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSON Formatter &amp; Validator — FreeCodeStore</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e7;font-family:'Inter',sans-serif;padding:24px;min-height:100vh}
+a{color:#22d3ee;text-decoration:none}a:hover{text-decoration:underline}
+.back{display:inline-block;margin-bottom:20px;font-size:14px}
+h1{font-size:24px;font-weight:600;margin-bottom:20px}
+.panel{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:16px;margin-bottom:16px}
+.toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+button{font-family:'Inter',sans-serif;font-size:13px;background:#22d3ee;color:#09090b;font-weight:500;cursor:pointer;border:none;padding:8px 14px;border-radius:6px}
+button:hover{opacity:0.9}
+button.secondary{background:#27272a;color:#e4e4e7}
+select{font-family:'Inter',sans-serif;font-size:13px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:6px 10px}
+textarea{width:100%;min-height:200px;resize:vertical;font-family:'JetBrains Mono',monospace;font-size:13px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:12px;outline:none;line-height:1.5}
+textarea:focus{border-color:#22d3ee}
+.tabs{display:flex;gap:4px;margin-bottom:12px}
+.tab{padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;background:#09090b;border:1px solid #27272a;color:#71717a}
+.tab.active{background:#22d3ee;color:#09090b;border-color:#22d3ee}
+.error{color:#ef4444;font-size:13px;font-family:'JetBrains Mono',monospace;padding:8px;background:#1c0a0a;border:1px solid #7f1d1d;border-radius:6px;margin-top:8px}
+.success{color:#4ade80;font-size:13px;padding:8px}
+.tree{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.8;max-height:400px;overflow:auto;background:#09090b;border:1px solid #27272a;border-radius:6px;padding:12px}
+.tree-key{color:#22d3ee}.tree-string{color:#4ade80}.tree-number{color:#f59e0b}.tree-bool{color:#a78bfa}.tree-null{color:#71717a}
+.tree-toggle{cursor:pointer;user-select:none;color:#71717a}
+.tree-toggle:hover{color:#e4e4e7}
+.tree-children{margin-left:20px}
+.tree-collapsed .tree-children{display:none}
+.path-display{font-family:'JetBrains Mono',monospace;font-size:12px;color:#22d3ee;background:#09090b;padding:6px 12px;border-radius:4px;margin-top:8px;min-height:24px}
+.stats{font-size:13px;color:#71717a;display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
+.stats span{color:#e4e4e7}
+.diff-container{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.diff-container textarea{min-height:150px}
+.diff-output{background:#09090b;border:1px solid #27272a;border-radius:6px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:13px;max-height:300px;overflow:auto;line-height:1.6}
+.diff-added{color:#4ade80;background:#052e16}
+.diff-removed{color:#ef4444;background:#1c0a0a}
+.output-area{background:#09090b;border:1px solid #27272a;border-radius:6px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:13px;max-height:400px;overflow:auto;white-space:pre-wrap;line-height:1.5}
+</style>
+</head>
+<body>
+<a class="back" href="/">&#8592; All Tools</a>
+<h1>JSON Formatter &amp; Validator</h1>
+
+<div class="panel">
+<div class="toolbar">
+<button onclick="formatJSON()">Format</button>
+<button onclick="minifyJSON()">Minify</button>
+<button onclick="validateJSON()">Validate</button>
+<select id="indent"><option value="2">2 spaces</option><option value="4">4 spaces</option><option value="\t">Tab</option></select>
+<button class="secondary" onclick="copyOutput()">Copy</button>
+<button class="secondary" onclick="clearAll()">Clear</button>
+</div>
+<textarea id="jsonInput" placeholder="Paste JSON here...">{
+  "name": "FreeCodeStore",
+  "version": "1.0.0",
+  "tools": ["regex", "json", "base64"],
+  "config": { "theme": "dark", "port": 3000, "debug": false },
+  "users": null
+}</textarea>
+<div id="validationResult"></div>
+<div class="stats" id="stats"></div>
+</div>
+
+<div class="tabs">
+<div class="tab active" data-tab="tree">Tree View</div>
+<div class="tab" data-tab="convert">Convert</div>
+<div class="tab" data-tab="diff">Diff</div>
+</div>
+
+<div id="tab-tree" class="panel">
+<div class="tree" id="treeView"></div>
+<div class="path-display" id="pathDisplay">Click a value to see its JSONPath</div>
+</div>
+
+<div id="tab-convert" class="panel" style="display:none">
+<div class="toolbar">
+<button onclick="toYAML()">To YAML</button>
+<button onclick="toCSV()">To CSV</button>
+<button onclick="toTS()">To TypeScript</button>
+</div>
+<div class="output-area" id="convertOutput">Select a conversion format above.</div>
+</div>
+
+<div id="tab-diff" class="panel" style="display:none">
+<div class="diff-container">
+<textarea id="diffA" placeholder="JSON A..."></textarea>
+<textarea id="diffB" placeholder="JSON B..."></textarea>
+</div>
+<button onclick="diffJSON()" style="margin-top:12px">Compare</button>
+<div class="diff-output" id="diffOutput" style="margin-top:12px"></div>
+</div>
+
+<script>
+const tabs = document.querySelectorAll('.tab');
+tabs.forEach(t => t.onclick = () => {
+  tabs.forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  document.querySelectorAll('[id^="tab-"]').forEach(p => p.style.display = 'none');
+  document.getElementById('tab-' + t.dataset.tab).style.display = 'block';
+});
+
+function getIndent() { const v = document.getElementById('indent').value; return v === '\\t' ? '\t' : parseInt(v); }
+function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function formatJSON() {
+  try {
+    const obj = JSON.parse(document.getElementById('jsonInput').value);
+    document.getElementById('jsonInput').value = JSON.stringify(obj, null, getIndent());
+    showValid(); computeStats(obj); buildTree(obj);
+  } catch(e) { showError(e); }
+}
+
+function minifyJSON() {
+  try {
+    const obj = JSON.parse(document.getElementById('jsonInput').value);
+    document.getElementById('jsonInput').value = JSON.stringify(obj);
+    showValid();
+  } catch(e) { showError(e); }
+}
+
+function validateJSON() {
+  try { const obj = JSON.parse(document.getElementById('jsonInput').value); showValid(); computeStats(obj); buildTree(obj); }
+  catch(e) { showError(e); }
+}
+
+function showError(e) {
+  const match = e.message.match(/position (\d+)/);
+  let msg = e.message;
+  if (match) {
+    const pos = parseInt(match[1]);
+    const lines = document.getElementById('jsonInput').value.substring(0, pos).split('\n');
+    msg += ` (line ${lines.length}, col ${lines[lines.length-1].length + 1})`;
+  }
+  document.getElementById('validationResult').innerHTML = `<div class="error">${escapeHtml(msg)}</div>`;
+}
+
+function showValid() { document.getElementById('validationResult').innerHTML = '<div class="success">Valid JSON</div>'; }
+
+function computeStats(obj) {
+  let objects=0, arrays=0, keys=0, maxDepth=0;
+  function walk(v, depth) {
+    if (depth > maxDepth) maxDepth = depth;
+    if (Array.isArray(v)) { arrays++; v.forEach(i => walk(i, depth+1)); }
+    else if (v && typeof v === 'object') { objects++; const k = Object.keys(v); keys += k.length; k.forEach(key => walk(v[key], depth+1)); }
+  }
+  walk(obj, 0);
+  document.getElementById('stats').innerHTML = `Objects: <span>${objects}</span> | Arrays: <span>${arrays}</span> | Keys: <span>${keys}</span> | Max depth: <span>${maxDepth}</span>`;
+}
+
+function buildTree(obj) {
+  const container = document.getElementById('treeView');
+  container.innerHTML = '';
+  container.appendChild(createTreeNode(obj, '$'));
+}
+
+function createTreeNode(value, path) {
+  const el = document.createElement('div');
+  if (value && typeof value === 'object') {
+    const isArr = Array.isArray(value);
+    const entries = isArr ? value.map((v,i) => [i,v]) : Object.entries(value);
+    const toggle = document.createElement('span');
+    toggle.className = 'tree-toggle';
+    toggle.textContent = isArr ? `[ ${entries.length} items ]` : `{ ${entries.length} keys }`;
+    toggle.onclick = () => el.classList.toggle('tree-collapsed');
+    el.appendChild(toggle);
+    const children = document.createElement('div');
+    children.className = 'tree-children';
+    entries.forEach(([key, val]) => {
+      const row = document.createElement('div');
+      const keySpan = document.createElement('span');
+      keySpan.className = 'tree-key';
+      keySpan.textContent = isArr ? `[${key}]: ` : `"${key}": `;
+      row.appendChild(keySpan);
+      const childPath = isArr ? `${path}[${key}]` : `${path}.${key}`;
+      if (val && typeof val === 'object') {
+        row.appendChild(createTreeNode(val, childPath));
+      } else {
+        const valSpan = document.createElement('span');
+        if (typeof val === 'string') { valSpan.className = 'tree-string'; valSpan.textContent = `"${val}"`; }
+        else if (typeof val === 'number') { valSpan.className = 'tree-number'; valSpan.textContent = val; }
+        else if (typeof val === 'boolean') { valSpan.className = 'tree-bool'; valSpan.textContent = val; }
+        else { valSpan.className = 'tree-null'; valSpan.textContent = 'null'; }
+        valSpan.style.cursor = 'pointer';
+        valSpan.onclick = () => document.getElementById('pathDisplay').textContent = childPath;
+        row.appendChild(valSpan);
+      }
+      children.appendChild(row);
+    });
+    el.appendChild(children);
+  }
+  return el;
+}
+
+function copyOutput() { navigator.clipboard.writeText(document.getElementById('jsonInput').value); }
+function clearAll() { document.getElementById('jsonInput').value = ''; document.getElementById('validationResult').innerHTML = ''; document.getElementById('stats').innerHTML = ''; document.getElementById('treeView').innerHTML = ''; }
+
+function toYAML() {
+  try {
+    const obj = JSON.parse(document.getElementById('jsonInput').value);
+    document.getElementById('convertOutput').textContent = jsonToYaml(obj, 0);
+  } catch(e) { document.getElementById('convertOutput').textContent = 'Error: ' + e.message; }
+}
+
+function jsonToYaml(obj, indent) {
+  const pad = '  '.repeat(indent);
+  if (obj === null) return 'null';
+  if (typeof obj !== 'object') return typeof obj === 'string' ? `"${obj}"` : String(obj);
+  if (Array.isArray(obj)) return obj.map(v => `${pad}- ${typeof v === 'object' && v !== null ? '\n' + jsonToYaml(v, indent+2) : jsonToYaml(v, 0)}`).join('\n');
+  return Object.entries(obj).map(([k,v]) => {
+    if (v && typeof v === 'object') return `${pad}${k}:\n${jsonToYaml(v, indent+1)}`;
+    return `${pad}${k}: ${jsonToYaml(v, 0)}`;
+  }).join('\n');
+}
+
+function toCSV() {
+  try {
+    const obj = JSON.parse(document.getElementById('jsonInput').value);
+    if (!Array.isArray(obj)) { document.getElementById('convertOutput').textContent = 'CSV conversion requires a JSON array of objects.'; return; }
+    const keys = [...new Set(obj.flatMap(o => Object.keys(o)))];
+    const rows = [keys.join(','), ...obj.map(o => keys.map(k => { const v = o[k]; return typeof v === 'string' ? `"${v.replace(/"/g,'""')}"` : v ?? ''; }).join(','))];
+    document.getElementById('convertOutput').textContent = rows.join('\n');
+  } catch(e) { document.getElementById('convertOutput').textContent = 'Error: ' + e.message; }
+}
+
+function toTS() {
+  try {
+    const obj = JSON.parse(document.getElementById('jsonInput').value);
+    document.getElementById('convertOutput').textContent = generateTS(obj, 'Root', 0);
+  } catch(e) { document.getElementById('convertOutput').textContent = 'Error: ' + e.message; }
+}
+
+function generateTS(obj, name, depth) {
+  if (Array.isArray(obj)) {
+    if (obj.length === 0) return `type ${name} = any[];`;
+    const item = obj[0];
+    if (item && typeof item === 'object') return generateTS(item, name + 'Item', depth) + `\n\ntype ${name} = ${name}Item[];`;
+    return `type ${name} = ${typeof item}[];`;
+  }
+  if (obj && typeof obj === 'object') {
+    const lines = Object.entries(obj).map(([k, v]) => {
+      let type = 'any';
+      if (v === null) type = 'null';
+      else if (Array.isArray(v)) type = v.length > 0 ? `${typeof v[0]}[]` : 'any[]';
+      else type = typeof v;
+      return `  ${k}: ${type};`;
+    });
+    return `interface ${name} {\n${lines.join('\n')}\n}`;
+  }
+  return `type ${name} = ${typeof obj};`;
+}
+
+function diffJSON() {
+  try {
+    const a = JSON.parse(document.getElementById('diffA').value);
+    const b = JSON.parse(document.getElementById('diffB').value);
+    const diffs = [];
+    diffObjects(a, b, '$', diffs);
+    if (diffs.length === 0) { document.getElementById('diffOutput').innerHTML = '<span style="color:#4ade80">No differences found.</span>'; return; }
+    document.getElementById('diffOutput').innerHTML = diffs.map(d => {
+      if (d.type === 'added') return `<div class="diff-added">+ ${escapeHtml(d.path)}: ${escapeHtml(JSON.stringify(d.value))}</div>`;
+      if (d.type === 'removed') return `<div class="diff-removed">- ${escapeHtml(d.path)}: ${escapeHtml(JSON.stringify(d.value))}</div>`;
+      return `<div class="diff-removed">- ${escapeHtml(d.path)}: ${escapeHtml(JSON.stringify(d.oldValue))}</div><div class="diff-added">+ ${escapeHtml(d.path)}: ${escapeHtml(JSON.stringify(d.newValue))}</div>`;
+    }).join('');
+  } catch(e) { document.getElementById('diffOutput').innerHTML = `<span style="color:#ef4444">${escapeHtml(e.message)}</span>`; }
+}
+
+function diffObjects(a, b, path, diffs) {
+  if (a === b) return;
+  if (typeof a !== typeof b || Array.isArray(a) !== Array.isArray(b) || a === null || b === null) {
+    if (a !== b) diffs.push({type:'changed', path, oldValue:a, newValue:b});
+    return;
+  }
+  if (typeof a !== 'object') { diffs.push({type:'changed', path, oldValue:a, newValue:b}); return; }
+  const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  allKeys.forEach(key => {
+    const p = Array.isArray(a) ? `${path}[${key}]` : `${path}.${key}`;
+    if (!(key in a)) diffs.push({type:'added', path:p, value:b[key]});
+    else if (!(key in b)) diffs.push({type:'removed', path:p, value:a[key]});
+    else diffObjects(a[key], b[key], p, diffs);
+  });
+}
+
+// Auto-validate on load
+try { const obj = JSON.parse(document.getElementById('jsonInput').value); computeStats(obj); buildTree(obj); showValid(); } catch(e) {}
+</script>
+<script src="/related.js"></script>
+</body>
+</html>

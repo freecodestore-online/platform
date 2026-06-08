@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>URL Parser &amp; Builder — FreeCodeStore</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e7;font-family:'Inter',sans-serif;padding:24px;min-height:100vh}
+a{color:#22d3ee;text-decoration:none}
+a:hover{text-decoration:underline}
+.back{display:inline-block;margin-bottom:20px;font-size:14px}
+h1{font-size:24px;font-weight:600;margin-bottom:20px}
+.panel{background:#18181b;border:1px solid #27272a;border-radius:8px;padding:16px;margin-bottom:16px}
+input,textarea{font-family:'JetBrains Mono',monospace;font-size:13px;background:#09090b;color:#e4e4e7;border:1px solid #27272a;border-radius:6px;padding:8px 12px;outline:none;width:100%}
+input:focus,textarea:focus{border-color:#22d3ee}
+button{font-family:'Inter',sans-serif;font-size:13px;background:#22d3ee;color:#09090b;font-weight:500;cursor:pointer;border:none;padding:8px 16px;border-radius:6px}
+button:hover{opacity:0.9}
+button.secondary{background:#27272a;color:#e4e4e7}
+button.small{font-size:11px;padding:4px 10px}
+.section-title{font-size:13px;font-weight:500;color:#71717a;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;background:#09090b;border:1px solid #27272a;color:#71717a;font-family:'Inter',sans-serif}
+.tab.active{background:#22d3ee;color:#09090b;border-color:#22d3ee}
+.parts-grid{display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:center}
+.parts-grid label{font-size:12px;color:#71717a;text-align:right;font-weight:500}
+.parts-grid input{font-size:12px;padding:6px 10px}
+.params-table{width:100%;border-collapse:collapse}
+.params-table th{text-align:left;font-size:11px;color:#71717a;text-transform:uppercase;letter-spacing:0.5px;padding:6px 8px;border-bottom:1px solid #27272a}
+.params-table td{padding:4px 8px;border-bottom:1px solid #27272a22}
+.params-table input{border:none;background:transparent;color:#e4e4e7;font-family:'JetBrains Mono',monospace;font-size:12px;padding:4px;outline:none;width:100%}
+.params-table input:focus{background:#09090b;border-radius:4px}
+.params-table .remove-btn{background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px;padding:4px}
+.built-url{background:#09090b;border:1px solid #27272a;border-radius:6px;padding:10px;font-family:'JetBrains Mono',monospace;font-size:13px;word-break:break-all;line-height:1.6}
+.compare-diff{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7}
+.diff-same{color:#71717a}
+.diff-a{color:#f87171;background:#dc262622;padding:0 2px;border-radius:2px}
+.diff-b{color:#4ade80;background:#16a34a22;padding:0 2px;border-radius:2px}
+.qr-container{text-align:center;margin-top:12px}
+.qr-container canvas{border:8px solid #fff;border-radius:4px}
+.stats{font-size:12px;color:#71717a;margin-top:8px}
+.encode-toggle{display:flex;gap:8px;align-items:center;font-size:13px}
+.encode-toggle label{color:#71717a;display:flex;align-items:center;gap:4px;cursor:pointer}
+.encode-toggle input[type=checkbox]{accent-color:#22d3ee;width:16px;height:16px}
+</style>
+</head>
+<body>
+<a class="back" href="/">&#8592; All Tools</a>
+<h1>URL Parser &amp; Builder</h1>
+
+<div class="panel">
+<div class="section-title">URL Input</div>
+<input id="urlInput" value="https://user:pass@api.example.com:8080/v1/users?page=2&limit=20&sort=name&order=asc#section-3" oninput="parseUrl()">
+<div class="row" style="margin-top:8px">
+<div class="encode-toggle"><label><input type="checkbox" id="encodeToggle" onchange="parseUrl()">URL Encode values</label></div>
+</div>
+</div>
+
+<div class="tabs">
+<div class="tab active" data-tab="parts">Parts</div>
+<div class="tab" data-tab="params">Query Params</div>
+<div class="tab" data-tab="compare">Compare</div>
+<div class="tab" data-tab="qr">QR Code</div>
+</div>
+
+<div id="tab-parts" class="panel">
+<div class="section-title">Parsed Components</div>
+<div class="parts-grid">
+<label>Protocol</label><input id="partProto" onchange="buildUrl()">
+<label>Username</label><input id="partUser" onchange="buildUrl()">
+<label>Password</label><input id="partPass" onchange="buildUrl()">
+<label>Host</label><input id="partHost" onchange="buildUrl()">
+<label>Port</label><input id="partPort" onchange="buildUrl()">
+<label>Path</label><input id="partPath" onchange="buildUrl()">
+<label>Query</label><input id="partQuery" readonly style="color:#71717a">
+<label>Hash</label><input id="partHash" onchange="buildUrl()">
+</div>
+<div class="section-title" style="margin-top:16px">Built URL</div>
+<div class="built-url" id="builtUrl"></div>
+<div class="row" style="margin-top:8px">
+<button class="small" onclick="navigator.clipboard.writeText(document.getElementById('builtUrl').textContent)">Copy URL</button>
+</div>
+<div class="stats" id="urlStats"></div>
+</div>
+
+<div id="tab-params" class="panel" style="display:none">
+<div class="section-title">Query Parameters</div>
+<table class="params-table">
+<thead><tr><th>Key</th><th>Value</th><th></th></tr></thead>
+<tbody id="paramsBody"></tbody>
+</table>
+<button class="small secondary" style="margin-top:8px" onclick="addParam()">+ Add Param</button>
+</div>
+
+<div id="tab-compare" class="panel" style="display:none">
+<div class="section-title">Compare Two URLs</div>
+<input id="compareA" placeholder="First URL" style="margin-bottom:8px" value="https://api.example.com/v1/users?page=1&limit=10">
+<input id="compareB" placeholder="Second URL" style="margin-bottom:8px" value="https://api.example.com/v2/users?page=1&limit=20&sort=name">
+<button class="small" onclick="compareUrls()">Compare</button>
+<div class="compare-diff" id="compareOutput" style="margin-top:12px"></div>
+</div>
+
+<div id="tab-qr" class="panel" style="display:none">
+<div class="section-title">QR Code</div>
+<button class="small" onclick="generateQr()">Generate QR Code</button>
+<div class="qr-container" id="qrContainer"></div>
+</div>
+
+<script>
+let params = [];
+
+function parseUrl() {
+  const raw = document.getElementById('urlInput').value.trim();
+  if (!raw) return;
+
+  try {
+    // Handle auth in URL
+    let url;
+    let username = '', password = '';
+    const authMatch = raw.match(/^(\w+):\/\/([^:@]+):([^@]+)@(.+)$/);
+    if (authMatch) {
+      username = authMatch[2];
+      password = authMatch[3];
+      url = new URL(authMatch[1] + '://' + authMatch[4]);
+    } else {
+      url = new URL(raw);
+      username = url.username;
+      password = url.password;
+    }
+
+    document.getElementById('partProto').value = url.protocol.replace(':', '');
+    document.getElementById('partUser').value = username;
+    document.getElementById('partPass').value = password;
+    document.getElementById('partHost').value = url.hostname;
+    document.getElementById('partPort').value = url.port;
+    document.getElementById('partPath').value = url.pathname;
+    document.getElementById('partHash').value = url.hash.replace('#', '');
+
+    params = [];
+    url.searchParams.forEach((v, k) => params.push({key: k, value: v}));
+    document.getElementById('partQuery').value = url.search.replace('?', '');
+
+    renderParams();
+    buildUrl();
+  } catch(e) {
+    document.getElementById('builtUrl').textContent = 'Invalid URL';
+  }
+}
+
+function renderParams() {
+  const body = document.getElementById('paramsBody');
+  body.innerHTML = params.map((p, i) => `
+    <tr>
+      <td><input value="${escapeAttr(p.key)}" onchange="params[${i}].key=this.value;buildUrl()"></td>
+      <td><input value="${escapeAttr(p.value)}" onchange="params[${i}].value=this.value;buildUrl()"></td>
+      <td><span class="remove-btn" onclick="params.splice(${i},1);renderParams();buildUrl()">&times;</span></td>
+    </tr>
+  `).join('');
+}
+
+function addParam() {
+  params.push({key: '', value: ''});
+  renderParams();
+}
+
+function buildUrl() {
+  const proto = document.getElementById('partProto').value || 'https';
+  const user = document.getElementById('partUser').value;
+  const pass = document.getElementById('partPass').value;
+  const host = document.getElementById('partHost').value;
+  const port = document.getElementById('partPort').value;
+  const path = document.getElementById('partPath').value;
+  const hash = document.getElementById('partHash').value;
+  const encode = document.getElementById('encodeToggle').checked;
+
+  let url = proto + '://';
+  if (user) { url += user; if (pass) url += ':' + pass; url += '@'; }
+  url += host;
+  if (port) url += ':' + port;
+  url += path || '/';
+
+  if (params.length) {
+    const qs = params.filter(p => p.key).map(p => {
+      const k = encode ? encodeURIComponent(p.key) : p.key;
+      const v = encode ? encodeURIComponent(p.value) : p.value;
+      return k + '=' + v;
+    }).join('&');
+    if (qs) url += '?' + qs;
+  }
+  if (hash) url += '#' + hash;
+
+  document.getElementById('builtUrl').textContent = url;
+  document.getElementById('partQuery').value = params.filter(p => p.key).map(p => p.key + '=' + p.value).join('&');
+
+  const len = url.length;
+  let warning = '';
+  if (len > 2048) warning = ' (exceeds 2048 char limit for most browsers)';
+  else if (len > 1000) warning = ' (long URL, consider shortening)';
+  document.getElementById('urlStats').textContent = `Length: ${len} characters${warning}`;
+}
+
+function compareUrls() {
+  const a = document.getElementById('compareA').value.trim();
+  const b = document.getElementById('compareB').value.trim();
+  if (!a || !b) return;
+
+  try {
+    const urlA = new URL(a);
+    const urlB = new URL(b);
+    const parts = ['protocol','hostname','port','pathname','hash'];
+    let html = '<table style="width:100%;font-size:12px;border-collapse:collapse">';
+    html += '<tr><th style="text-align:left;color:#71717a;padding:4px 8px;width:80px">Part</th><th style="text-align:left;color:#f87171;padding:4px 8px">URL A</th><th style="text-align:left;color:#4ade80;padding:4px 8px">URL B</th></tr>';
+
+    parts.forEach(part => {
+      const va = urlA[part] || '(empty)';
+      const vb = urlB[part] || '(empty)';
+      const same = va === vb;
+      html += `<tr style="border-top:1px solid #27272a"><td style="padding:4px 8px;color:#71717a">${part}</td><td style="padding:4px 8px;color:${same ? '#71717a' : '#f87171'}">${escapeHtml(va)}</td><td style="padding:4px 8px;color:${same ? '#71717a' : '#4ade80'}">${escapeHtml(vb)}</td></tr>`;
+    });
+
+    // Query params comparison
+    const paramsA = {};
+    const paramsB = {};
+    urlA.searchParams.forEach((v, k) => paramsA[k] = v);
+    urlB.searchParams.forEach((v, k) => paramsB[k] = v);
+    const allKeys = [...new Set([...Object.keys(paramsA), ...Object.keys(paramsB)])];
+
+    html += '<tr style="border-top:2px solid #27272a"><td colspan="3" style="padding:8px;color:#71717a;font-weight:600">Query Parameters</td></tr>';
+    allKeys.forEach(k => {
+      const va = paramsA[k];
+      const vb = paramsB[k];
+      const colorA = va === undefined ? '#71717a' : va === vb ? '#71717a' : '#f87171';
+      const colorB = vb === undefined ? '#71717a' : va === vb ? '#71717a' : '#4ade80';
+      html += `<tr style="border-top:1px solid #27272a22"><td style="padding:4px 8px;color:#22d3ee;font-size:11px">${escapeHtml(k)}</td><td style="padding:4px 8px;color:${colorA}">${va !== undefined ? escapeHtml(va) : '<span style="color:#71717a">-</span>'}</td><td style="padding:4px 8px;color:${colorB}">${vb !== undefined ? escapeHtml(vb) : '<span style="color:#71717a">-</span>'}</td></tr>`;
+    });
+
+    html += '</table>';
+    document.getElementById('compareOutput').innerHTML = html;
+  } catch(e) {
+    document.getElementById('compareOutput').innerHTML = '<span style="color:#ef4444">Invalid URL: ' + escapeHtml(e.message) + '</span>';
+  }
+}
+
+// QR Code generator (canvas-drawn)
+function generateQr() {
+  const url = document.getElementById('builtUrl').textContent || document.getElementById('urlInput').value;
+  if (!url || url === 'Invalid URL') return;
+
+  const container = document.getElementById('qrContainer');
+  // Use a simple QR encoding via a known pattern approach
+  // For a real QR we'd need a full encoder — use a basic visual representation
+  const data = url;
+  const size = 200;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  // Simple hash-based QR-like pattern (not a scannable QR, but a visual representation)
+  // For a real QR code you'd need a QR encoder library
+  // Instead, generate via an image from a free API
+  container.innerHTML = '';
+  const img = document.createElement('img');
+  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=000000`;
+  img.width = 200;
+  img.height = 200;
+  img.alt = 'QR Code';
+  img.style.borderRadius = '4px';
+  img.style.border = '8px solid #fff';
+  container.appendChild(img);
+
+  const p = document.createElement('div');
+  p.style.cssText = 'font-size:11px;color:#71717a;margin-top:8px';
+  p.textContent = 'QR code for: ' + (url.length > 60 ? url.slice(0, 60) + '...' : url);
+  container.appendChild(p);
+}
+
+function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escapeAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  document.querySelectorAll('[id^="tab-"]').forEach(p => p.style.display = 'none');
+  document.getElementById('tab-' + t.dataset.tab).style.display = 'block';
+});
+
+parseUrl();
+</script>
+<script src="/related.js"></script>
+</body>
+</html>
