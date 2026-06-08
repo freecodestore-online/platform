@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://freecodestore.pages.dev/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/formatters/css-minifier/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/formatters/env-editor/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/formatters/json-formatter/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/formatters/markdown-preview/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/formatters/sql-formatter/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/encoders/base64/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/encoders/jwt-decoder/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/generators/css-grid-gen/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/generators/hash-generator/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/generators/lorem-generator/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/generators/uuid-generator/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/testers/api-tester/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/testers/cron-parser/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/testers/diff-checker/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/testers/http-status/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/testers/regex-tester/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/converters/color-converter/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/converters/timestamp/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/converters/url-parser/</loc><lastmod>2026-06-09</lastmod></url>
+  <url><loc>https://freecodestore.pages.dev/converters/yaml-json/</loc><lastmod>2026-06-09</lastmod></url>
+</urlset>
