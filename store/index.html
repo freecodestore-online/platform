@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FreeCodeStore — 20 Developer Tools</title>
+<meta name="description" content="20 free developer tools. Regex tester, JSON formatter, diff checker, API tester, UUID generator. No signup.">
+<link rel="canonical" href="https://freecodestore.pages.dev/">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--accent:#22d3ee;--bg:#0a0a0a;--text:#e4e4e7;--muted:#71717a;--panel:#18181b;--line:#27272a}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text)}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid var(--line);padding:.6rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:.5rem;text-decoration:none;color:var(--text)}
+.brand-icon{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--accent)}.brand-name{font-size:1rem;font-weight:700}
+nav{display:flex;gap:.85rem;font-size:.82rem;font-weight:600;margin-left:auto}
+nav a{color:var(--muted)}nav a:hover{color:var(--text);text-decoration:none}
+.hero{text-align:center;padding:2.5rem 1.5rem 1rem}
+.hero h1{font-size:2rem;font-weight:800;margin-bottom:.4rem}.hero h1 span{color:var(--accent)}
+.hero p{color:var(--muted);font-size:.9rem;max-width:550px;margin:0 auto .6rem;font-family:'JetBrains Mono',monospace}
+.badge{display:inline-block;padding:.2rem .6rem;border-radius:99px;font-size:.72rem;font-weight:600;background:var(--panel);border:1px solid var(--line);color:var(--muted);margin:.1rem}
+.badge.cyan{background:rgba(34,211,238,.1);border-color:rgba(34,211,238,.3);color:#22d3ee}
+.filters{max-width:1100px;margin:0 auto;padding:.6rem 1.5rem;display:flex;gap:.35rem;flex-wrap:wrap;justify-content:center}
+.f{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:.3rem .7rem;border-radius:6px;font-size:.72rem;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s}
+.f:hover{border-color:var(--accent);color:var(--text)}.f.active{background:var(--accent);border-color:var(--accent);color:#000}
+.grid{max-width:1100px;margin:0 auto;padding:0 1.5rem 2rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.6rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.8rem;display:flex;gap:.6rem;align-items:flex-start;transition:.15s;text-decoration:none;color:inherit}
+.card:hover{border-color:var(--accent);transform:translateY(-1px);text-decoration:none}
+.card.hidden{display:none}
+.card-icon{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.card-body{flex:1;min-width:0}.card-name{font-size:.84rem;font-weight:700;margin-bottom:.1rem}
+.card-desc{font-size:.68rem;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-cta{font-size:.68rem;font-weight:600;color:var(--accent);white-space:nowrap;align-self:center}
+.xstore{max-width:1100px;margin:1rem auto;padding:0 1.5rem;text-align:center}
+.xstore h3{font-size:.7rem;color:#525252;font-weight:600;margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.4px}
+.xstore-grid{display:flex;justify-content:center;gap:.35rem;flex-wrap:wrap}
+.xstore-link{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:var(--panel);border:1px solid var(--line);border-radius:6px;text-decoration:none;color:var(--muted);font-size:.68rem;font-weight:600}
+.xstore-link:hover{border-color:var(--accent);color:var(--text);text-decoration:none}
+footer{border-top:1px solid var(--line);padding:1rem;text-align:center;font-size:.68rem;color:#525252}
+footer a{color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+<a href="/" class="brand"><span class="brand-icon">&lt;/&gt;</span><span class="brand-name">FreeCodeStore</span></a>
+<nav><a href="https://openfrontier.pages.dev">Open Frontier</a><a href="/">All</a><a href="/testers/regex-tester/">Regex</a><a href="/formatters/json-formatter/">JSON</a><a href="/testers/api-tester/">API</a></nav>
+</header>
+<section class="hero">
+<h1>Free<span>Code</span>Store</h1>
+<p>// 20 developer tools. no signup. no tracking.</p>
+<span class="badge">20 Tools</span><span class="badge">No Signup</span><span class="badge cyan">Developer-First</span>
+</section>
+<div class="filters"><button class="f active" data-cat="all">All (20)</button>
+<button class="f" data-cat="converters">Converters (4)</button>
+<button class="f" data-cat="encoders">Encoders (2)</button>
+<button class="f" data-cat="formatters">Formatters (5)</button>
+<button class="f" data-cat="generators">Generators (4)</button>
+<button class="f" data-cat="testers">Testers (5)</button>
+</div>
+<div class="grid"><a href="/testers/regex-tester/" class="card" data-cat="testers"><div class="card-icon" style="background:#22d3ee;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">.*</div><div class="card-body"><div class="card-name">Regex Tester</div><div class="card-desc">Live match highlighting, flags, groups, replace mode, explain mode, 24 common patterns, cheatsheet.</div></div><span class="card-cta">Open →</span></a><a href="/formatters/json-formatter/" class="card" data-cat="formatters"><div class="card-icon" style="background:#a855f7;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">{}</div><div class="card-body"><div class="card-name">JSON Formatter</div><div class="card-desc">Beautify, minify, validate, tree view, JSONPath, diff two JSONs, convert to YAML/CSV/TypeScript types.</div></div><span class="card-cta">Open →</span></a><a href="/encoders/base64/" class="card" data-cat="encoders"><div class="card-icon" style="background:#f97316;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">B64</div><div class="card-body"><div class="card-name">Base64 &amp; Encoders</div><div class="card-desc">Base64, URL, HTML entities, hex, binary, ROT13. File mode with image preview. Bidirectional.</div></div><span class="card-cta">Open →</span></a><a href="/generators/hash-generator/" class="card" data-cat="generators"><div class="card-icon" style="background:#ef4444;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">#</div><div class="card-body"><div class="card-name">Hash Generator</div><div class="card-desc">MD5, SHA-1/256/384/512 simultaneously. File hashing, HMAC, password strength analyzer.</div></div><span class="card-cta">Open →</span></a><a href="/generators/uuid-generator/" class="card" data-cat="generators"><div class="card-icon" style="background:#10b981;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">id</div><div class="card-body"><div class="card-name">UUID Generator</div><div class="card-desc">UUID v4/v7, ULID, nanoid, CUID, ObjectId. Bulk 1-100, parse, custom alphabet.</div></div><span class="card-cta">Open →</span></a><a href="/testers/diff-checker/" class="card" data-cat="testers"><div class="card-icon" style="background:#eab308;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">+-</div><div class="card-body"><div class="card-name">Diff Checker</div><div class="card-desc">Side-by-side text diff. Character/word/line modes, inline view, ignore whitespace.</div></div><span class="card-cta">Open →</span></a><a href="/testers/cron-parser/" class="card" data-cat="testers"><div class="card-icon" style="background:#6366f1;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">**</div><div class="card-body"><div class="card-name">Cron Parser</div><div class="card-desc">Human-readable cron descriptions, next 10 runs, visual builder, 15 presets.</div></div><span class="card-cta">Open →</span></a><a href="/encoders/jwt-decoder/" class="card" data-cat="encoders"><div class="card-icon" style="background:#ec4899;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">JWT</div><div class="card-body"><div class="card-name">JWT Decoder</div><div class="card-desc">Decode header + payload, verify HMAC signature, check expiration, generate tokens.</div></div><span class="card-cta">Open →</span></a><a href="/converters/color-converter/" class="card" data-cat="converters"><div class="card-icon" style="background:#8b5cf6;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">#c</div><div class="card-body"><div class="card-name">Color Converter</div><div class="card-desc">Hex/RGB/HSL/HSB/CMYK/named. All formats at once, contrast check, shades, harmonies.</div></div><span class="card-cta">Open →</span></a><a href="/converters/timestamp/" class="card" data-cat="converters"><div class="card-icon" style="background:#06b6d4;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">ts</div><div class="card-body"><div class="card-name">Timestamp Converter</div><div class="card-desc">Unix timestamp, 16 timezones, date math, countdown, relative time, epoch milestones.</div></div><span class="card-cta">Open →</span></a><a href="/formatters/sql-formatter/" class="card" data-cat="formatters"><div class="card-icon" style="background:#3b82f6;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">SQL</div><div class="card-body"><div class="card-name">SQL Formatter</div><div class="card-desc">Beautify, minify, syntax highlight SQL. Uppercase keywords, explain query parts.</div></div><span class="card-cta">Open →</span></a><a href="/testers/api-tester/" class="card" data-cat="testers"><div class="card-icon" style="background:#22d3ee;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">API</div><div class="card-body"><div class="card-name">API Tester</div><div class="card-desc">Mini-Postman. GET/POST/PUT/DELETE, headers, auth, body. History, cURL import/export.</div></div><span class="card-cta">Open →</span></a><a href="/formatters/markdown-preview/" class="card" data-cat="formatters"><div class="card-icon" style="background:#71717a;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">MD</div><div class="card-body"><div class="card-name">Markdown Editor</div><div class="card-desc">Split-view editor + live preview. GFM, syntax highlighting, toolbar, TOC, export HTML.</div></div><span class="card-cta">Open →</span></a><a href="/formatters/css-minifier/" class="card" data-cat="formatters"><div class="card-icon" style="background:#eab308;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">&lt;/&gt;</div><div class="card-body"><div class="card-name">Minifier/Beautifier</div><div class="card-desc">CSS, JS, HTML minify + beautify. Size comparison, configurable indentation.</div></div><span class="card-cta">Open →</span></a><a href="/generators/lorem-generator/" class="card" data-cat="generators"><div class="card-icon" style="background:#f97316;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">Aa</div><div class="card-body"><div class="card-name">Mock Data Generator</div><div class="card-desc">Lorem Ipsum, fake names, emails, addresses, JSON mock APIs. Up to 100 items.</div></div><span class="card-cta">Open →</span></a><a href="/testers/http-status/" class="card" data-cat="testers"><div class="card-icon" style="background:#10b981;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">200</div><div class="card-body"><div class="card-name">HTTP Status Codes</div><div class="card-desc">Complete reference. Search, categories, decision tree. Copy as code comment.</div></div><span class="card-cta">Open →</span></a><a href="/formatters/env-editor/" class="card" data-cat="formatters"><div class="card-icon" style="background:#a855f7;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">ENV</div><div class="card-body"><div class="card-name">.env Editor</div><div class="card-desc">Visual key-value editor. Import/export .env, convert to JSON/Docker/YAML. Mask values.</div></div><span class="card-cta">Open →</span></a><a href="/converters/yaml-json/" class="card" data-cat="converters"><div class="card-icon" style="background:#ec4899;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">Y↔J</div><div class="card-body"><div class="card-name">YAML ↔ JSON</div><div class="card-desc">Bidirectional converter. Edit either side, validate, error highlighting.</div></div><span class="card-cta">Open →</span></a><a href="/generators/css-grid-gen/" class="card" data-cat="generators"><div class="card-icon" style="background:#6366f1;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">▦</div><div class="card-body"><div class="card-name">CSS Grid Generator</div><div class="card-desc">Visual grid builder. Named areas, fr/px/%, responsive breakpoints, Tailwind output.</div></div><span class="card-cta">Open →</span></a><a href="/converters/url-parser/" class="card" data-cat="converters"><div class="card-icon" style="background:#ef4444;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700">://</div><div class="card-body"><div class="card-name">URL Parser</div><div class="card-desc">Parse any URL into parts. Edit query params, encode/decode, QR code, compare two URLs.</div></div><span class="card-cta">Open →</span></a></div>
+<section class="xstore">
+<h3>More on Open Frontier</h3>
+<div class="xstore-grid">
+<a href="https://freedesignstore.pages.dev" class="xstore-link">🎨 Design</a>
+<a href="https://freemarketingstore.pages.dev" class="xstore-link">📣 Marketing</a>
+<a href="https://freerobotstore.online" class="xstore-link">🦾 Robots</a>
+<a href="https://freequantumstore.pages.dev" class="xstore-link">⚛️ Quantum</a>
+<a href="https://freecryptostore.pages.dev" class="xstore-link">🔗 Crypto</a>
+</div>
+</section>
+<footer>FreeCodeStore — part of <a href="https://openfrontier.pages.dev">Open Frontier</a> | <a href="https://openfrontier-docs.pages.dev">Docs</a></footer>
+<script>
+(function(){const bs=document.querySelectorAll('.f');const cs=document.querySelectorAll('.card');bs.forEach(b=>{b.onclick=()=>{bs.forEach(x=>x.classList.remove('active'));b.classList.add('active');const cat=b.dataset.cat;cs.forEach(c=>{if(cat==='all'||c.dataset.cat===cat)c.classList.remove('hidden');else c.classList.add('hidden');});};})})();
+</script>
+</body>
+</html>

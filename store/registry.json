@@ -89,6 +89,96 @@
       "iconBg": "#06b6d4",
       "category": "converters",
       "section": "converters"
+    },
+    {
+      "id": "sql-formatter",
+      "name": "SQL Formatter",
+      "description": "Beautify, minify, syntax highlight SQL. Uppercase keywords, explain query parts.",
+      "icon": "SQL",
+      "iconBg": "#3b82f6",
+      "category": "formatters",
+      "section": "formatters"
+    },
+    {
+      "id": "api-tester",
+      "name": "API Tester",
+      "description": "Mini-Postman. GET/POST/PUT/DELETE, headers, auth, body. History, cURL import/export.",
+      "icon": "API",
+      "iconBg": "#22d3ee",
+      "category": "testers",
+      "section": "testers"
+    },
+    {
+      "id": "markdown-preview",
+      "name": "Markdown Editor",
+      "description": "Split-view editor + live preview. GFM, syntax highlighting, toolbar, TOC, export HTML.",
+      "icon": "MD",
+      "iconBg": "#71717a",
+      "category": "formatters",
+      "section": "formatters"
+    },
+    {
+      "id": "css-minifier",
+      "name": "Minifier/Beautifier",
+      "description": "CSS, JS, HTML minify + beautify. Size comparison, configurable indentation.",
+      "icon": "</>",
+      "iconBg": "#eab308",
+      "category": "formatters",
+      "section": "formatters"
+    },
+    {
+      "id": "lorem-generator",
+      "name": "Mock Data Generator",
+      "description": "Lorem Ipsum, fake names, emails, addresses, JSON mock APIs. Up to 100 items.",
+      "icon": "Aa",
+      "iconBg": "#f97316",
+      "category": "generators",
+      "section": "generators"
+    },
+    {
+      "id": "http-status",
+      "name": "HTTP Status Codes",
+      "description": "Complete reference. Search, categories, decision tree. Copy as code comment.",
+      "icon": "200",
+      "iconBg": "#10b981",
+      "category": "testers",
+      "section": "testers"
+    },
+    {
+      "id": "env-editor",
+      "name": ".env Editor",
+      "description": "Visual key-value editor. Import/export .env, convert to JSON/Docker/YAML. Mask values.",
+      "icon": "ENV",
+      "iconBg": "#a855f7",
+      "category": "formatters",
+      "section": "formatters"
+    },
+    {
+      "id": "yaml-json",
+      "name": "YAML ↔ JSON",
+      "description": "Bidirectional converter. Edit either side, validate, error highlighting.",
+      "icon": "Y↔J",
+      "iconBg": "#ec4899",
+      "category": "converters",
+      "section": "converters"
+    },
+    {
+      "id": "css-grid-gen",
+      "name": "CSS Grid Generator",
+      "description": "Visual grid builder. Named areas, fr/px/%, responsive breakpoints, Tailwind output.",
+      "icon": "▦",
+      "iconBg": "#6366f1",
+      "category": "generators",
+      "section": "generators"
+    },
+    {
+      "id": "url-parser",
+      "name": "URL Parser",
+      "description": "Parse any URL into parts. Edit query params, encode/decode, QR code, compare two URLs.",
+      "icon": "://",
+      "iconBg": "#ef4444",
+      "category": "converters",
+      "section": "converters"
     }
   ]
 }
